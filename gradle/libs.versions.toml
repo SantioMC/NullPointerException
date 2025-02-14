@@ -1,0 +1,39 @@
+[versions]
+kotlin = "2.0.21"
+ksp = "2.0.21-1.0.25"
+pluginyml = "0.6.0"
+packetevents = "2.7.0"
+shadow = "8.3.5"
+paper = "1.21.4-R0.1-SNAPSHOT"
+autoservice-google = "1.1.1"
+autoservice-ksp = "1.2.0"
+cloud = "2.0.0"
+cloud-paper = "2.0.0-beta.10"
+iron = "f77a1ccb6a"
+flyway = "10.16.0"
+sqlite = "3.47.1.0"
+
+[plugins]
+pluginyml = { id = "net.minecrell.plugin-yml.paper", version.ref = "pluginyml" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow"}
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+
+[libraries]
+autoservice-google = { module = "com.google.auto.service:auto-service", version.ref="autoservice-google" }
+autoservice-ksp = { module = "dev.zacsweers.autoservice:auto-service-ksp", version.ref="autoservice-ksp" }
+
+packetevents-spigot = { module = "com.github.retrooper:packetevents-spigot", version.ref = "packetevents" }
+paper = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+
+cloud-core = { module = "org.incendo:cloud-core", version.ref = "cloud" }
+cloud-annotations = { module = "org.incendo:cloud-annotations", version.ref = "cloud" }
+cloud-kotlin = { module = "org.incendo:cloud-kotlin-coroutines-annotations", version.ref = "cloud" }
+cloud-paper = { module = "org.incendo:cloud-paper", version.ref = "cloud-paper" }
+
+sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+iron = { module = "gg.ingot.iron:iron", version.ref = "iron" }
+
+[bundles]
+cloud = ["cloud-core", "cloud-annotations", "cloud-kotlin", "cloud-paper"]
+database = ["sqlite", "flyway-core", "iron"]

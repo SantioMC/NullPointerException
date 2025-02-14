@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS user_settings(
+    id TEXT PRIMARY KEY NOT NULL,
+    alerts Integer NOT NULL DEFAULT 0,
+    ignore_bypass INTEGER NOT NULL DEFAULT 0
+)
