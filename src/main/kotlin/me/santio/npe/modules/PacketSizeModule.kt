@@ -18,7 +18,7 @@ class PacketSizeModule: Module(
         val buffer = event.byteBuf
         val readable = ByteBufHelper.readableBytes(buffer)
 
-        if (readable > maxBytes) flag(event) {
+        if (readable > maxBytes) flag(event, disconnect = false) {
             "packetSize" to readable
         }
     }

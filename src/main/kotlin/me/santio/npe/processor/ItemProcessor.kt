@@ -88,7 +88,13 @@ class ItemProcessor: Processor("Illegal Items", clone = false, priority = Packet
             event.markForReEncode(true)
 
             val extra = Component.text("Click to copy Item Data", NamedTextColor.YELLOW)
-            flag(event, disconnect = false, extra = extra, clickEvent = ClickEvent.copyToClipboard(item.toString())) {
+            flag(
+                event,
+                disconnect = false,
+                cancelEvent = false,
+                extra = extra,
+                clickEvent = ClickEvent.copyToClipboard(item.toString())
+            ) {
                 "itemSize" to ByteBufHelper.readableBytes(buffer)
                 "item" to item.type.name
             }

@@ -64,6 +64,11 @@ kotlin {
     }
 }
 
+tasks.shadowJar {
+    mergeServiceFiles()
+    archiveFileName.set("NullPointerException.jar")
+}
+
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }

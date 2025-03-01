@@ -9,8 +9,6 @@ import me.santio.npe.NPE
 import me.santio.npe.data.npe
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import org.bukkit.entity.Player
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -22,10 +20,8 @@ abstract class Processor(
     open val priority: PacketListenerPriority = PacketListenerPriority.LOWEST
 ): PacketListener {
 
-    private val serializer = JSONComponentSerializer.json();
-
     final override fun onPacketReceive(event: PacketReceiveEvent?) {
-        if (event?.user?.profile == null || event.user?.uuid == null) return
+        if (event?.user?.profile == null || event.user?.uuid == null || event.getPlayer<Player>() == null) return
 
         if (filter()?.contains(event.packetType) != false) {
             val event = if (clone) event.clone() else event
@@ -47,7 +43,7 @@ abstract class Processor(
     }
 
     final override fun onPacketSend(event: PacketSendEvent?) {
-        if (event?.user?.profile == null || event.user?.uuid == null) return
+        if (event?.user?.profile == null || event.user?.uuid == null || event.getPlayer<Player>() == null) return
 
         if (filter()?.contains(event.packetType) != false) {
             val event = if (clone) event.clone() else event
@@ -66,44 +62,25 @@ abstract class Processor(
         return null
     }
 
-    open fun flag(event: PacketReceiveEvent, disconnect: Boolean = true, clickEvent: ClickEvent? = null, extra: Component? = null, data: FlagData.() -> Unit = {}) {
-        val details = FlagData(mutableMapOf(
+    open fun flag(event: PacketReceiveEvent, disconnect: Boolean = true, cancelEvent: Boolean = true, clickEvent: ClickEvent? = null, extra: Component? = null, data: FlagData.() -> Unit = {}) {
+        if (event.getPlayer<Player>() == null) return
+
+        if (cancelEvent) event.isCancelled = true
+
+        event.getPlayer<Player>().npe.flag(
+            event.getPlayer<Player>(),
+            id,
+            disconnect,
+            clickEvent,
+            extra
+        ) {
             "packetType" to event.packetType.name
-        )).apply(data)
-
-        // Permission check
-        try {
-            val player = event.getPlayer<Player>()
-            if (!player.npe.bypassing() && disconnect) {
-                event.user.closeConnection()
-            }
-        } catch (e: Exception) {
-            NPE.logger.error("Failed to perform permission check on '{}'", event.user.name, e)
+            data()
         }
+    }
 
-        // Send the alert to administrators
-        var hover = Component.newline()
-        for (data in details.map()) {
-            hover = hover.append(
-                Component.text(data.key, NPE.primaryColor)
-                    .append(Component.text(": ", NamedTextColor.GRAY))
-                    .append(Component.text(data.value.toString(), NamedTextColor.WHITE))
-                    .appendNewline()
-            )
-        }
-
-        extra?.takeIf {
-            serializer.serialize(it).length <= 2048
-        }?.let { hover = hover.append(Component.newline().append(it)) }
-
-        val alert = Component.empty()
-            .append(Component.text(event.getPlayer<Player>().name, NamedTextColor.RED))
-            .append(Component.text(" was detected for ", NamedTextColor.GRAY))
-            .append(Component.text(this.id, NamedTextColor.YELLOW))
-            .hoverEvent(hover)
-            .clickEvent(clickEvent)
-
-        NPE.broadcast(alert)
+    override fun toString(): String {
+        return id
     }
 
     protected companion object {

@@ -13,8 +13,13 @@ import me.santio.npe.data.npe
 import me.santio.npe.database.Database
 import me.santio.npe.database.column.UUIDAdapter
 import me.santio.npe.ruleset.RuleSet
+import me.santio.npe.tasks.BufferResetTask
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.event.Listener
@@ -70,6 +75,8 @@ class NPE: JavaPlugin() {
         }
 
         PacketEvents.getAPI().init();
+
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, BufferResetTask, 20L, 20L)
     }
 
     override fun onDisable() {
@@ -84,9 +91,30 @@ class NPE: JavaPlugin() {
 
     companion object {
         private val serializer = PlainTextComponentSerializer.plainText()
+
         val primaryColor = TextColor.fromHexString("#f44d1a")!!
+        val debugColor = TextColor.fromHexString("#f51b55")!!
+
         val logger: Logger = LoggerFactory.getLogger(NPE::class.java)
         val instance: NPE by lazy { getPlugin(NPE::class.java) }
+
+        val miniMessage = MiniMessage.builder()
+            .editTags { builder ->
+                builder.resolver(Placeholder.styling(
+                    "primary",
+                    primaryColor
+                ))
+                builder.resolver(Placeholder.styling(
+                    "debug",
+                    debugColor
+                ))
+                builder.resolver(Placeholder.styling(
+                    "body",
+                    NamedTextColor.GRAY
+                ))
+            }
+            .postProcessor { component -> component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE) }
+            .build()
 
         lateinit var database: Iron
         lateinit var commandManager: PaperCommandManager<Source>
