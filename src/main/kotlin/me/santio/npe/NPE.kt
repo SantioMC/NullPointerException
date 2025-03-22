@@ -8,10 +8,7 @@ import me.santio.npe.base.ProcessorLoader
 import me.santio.npe.command.BaseCommand
 import me.santio.npe.data.NPEUser
 import me.santio.npe.data.PacketDumper
-import me.santio.npe.data.UserData
 import me.santio.npe.data.npe
-import me.santio.npe.database.HibernateConfig
-import me.santio.npe.database.HibernateDriver
 import me.santio.npe.ruleset.RuleSet
 import me.santio.npe.tasks.BufferResetTask
 import net.kyori.adventure.text.Component
@@ -33,8 +30,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.io.path.createDirectories
-import kotlin.io.path.createFile
-import kotlin.io.path.exists
 
 
 class NPE: JavaPlugin() {
@@ -52,13 +47,6 @@ class NPE: JavaPlugin() {
     override fun onEnable() {
         this.dataPath.createDirectories()
         this.saveDefaultConfig()
-
-        val dbFile = this.dataPath.resolve("data.db").toAbsolutePath()
-        if (!dbFile.exists()) dbFile.createFile()
-
-        database = HibernateDriver().connect(HibernateConfig(
-            url = "jdbc:h2:file:${dbFile}"
-        )).registerEntities(UserData::class.java)
 
         commandManager = PaperCommandManager.builder<Source>(PaperSimpleSenderMapper.simpleSenderMapper())
             .executionCoordinator(ExecutionCoordinator.asyncCoordinator<Source>())
@@ -88,8 +76,6 @@ class NPE: JavaPlugin() {
             for (player in NPEUser.users.values) {
                 player.save()
             }
-
-            database.close()
         }
     }
 
@@ -120,7 +106,6 @@ class NPE: JavaPlugin() {
             .postProcessor { component -> component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE) }
             .build()
 
-        lateinit var database: HibernateDriver
         lateinit var commandManager: PaperCommandManager<Source>
 
         fun broadcast(message: Component) {

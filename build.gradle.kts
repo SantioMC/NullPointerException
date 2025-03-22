@@ -24,7 +24,7 @@ dependencies {
     implementation(libs.bundles.cloud)
     compileOnly(libs.paper)
 
-    implementation(libs.bundles.database)
+    implementation(libs.gson)
 
     ksp(libs.autoservice.ksp)
     compileOnly(libs.autoservice.google)
@@ -63,10 +63,20 @@ kotlin {
     }
 }
 
-tasks.shadowJar {
-    mergeServiceFiles()
-    minimize()
-    archiveFileName.set("NullPointerException.jar")
+tasks {
+    shadowJar {
+        mergeServiceFiles()
+        minimize()
+        archiveFileName.set("NullPointerException.jar")
+
+        exclude("org.intellij.lang.annotations")
+        exclude("")
+    }
+
+    build {
+        dependsOn(shadowJar)
+    }
+
 }
 
 java {

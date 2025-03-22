@@ -2,6 +2,9 @@ package me.santio.npe.data
 
 import com.github.retrooper.packetevents.PacketEvents
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
+import com.google.gson.GsonBuilder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import me.santio.npe.NPE
 import me.santio.npe.base.BufferKey
 import me.santio.npe.base.FlagData
@@ -12,9 +15,11 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.io.path.*
 import com.github.retrooper.packetevents.protocol.item.ItemStack as PacketItemStack
 
 data class NPEUser(
@@ -190,17 +195,20 @@ data class NPEUser(
         NPE.broadcast(alert)
     }
 
+    fun getPath(): Path {
+        return NPE.instance.dataPath.resolve("data").resolve("$uniqueId.json")
+    }
+
     /**
      * Loads the user's settings from the database
      */
     suspend fun load() {
-        try {
-            data = NPE.database.get<UserData>(
-                "FROM user_data WHERE id = :id",
-                mapOf("id" to uniqueId)
-            ) ?: UserData(uniqueId)
-        } catch (e: Exception) {
-            NPE.logger.error("Failed to load user data for '{}'", uniqueId, e)
+        withContext(Dispatchers.IO) {
+            val path = getPath()
+            if (!path.parent.exists()) path.parent.createDirectories()
+
+            if (!path.exists()) data = UserData()
+            else data = gson.fromJson(path.readText(), UserData::class.java)
         }
     }
 
@@ -208,13 +216,21 @@ data class NPEUser(
      * Saves the user's settings to the database
      */
     suspend fun save() {
-        NPE.database.useSession {
-            it.persist(data)
+        withContext(Dispatchers.IO) {
+            val path = getPath()
+
+            if (!path.parent.exists()) path.parent.createDirectories()
+            if (!path.exists()) path.createFile()
+
+            path.writeText(gson.toJson(data))
         }
     }
 
     companion object {
         private val serializer = JSONComponentSerializer.json();
+        private val gson = GsonBuilder()
+            .serializeNulls()
+            .create()
 
         /**
          * A holding of all users registered with NPE
