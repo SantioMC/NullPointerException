@@ -56,7 +56,8 @@ class DebugCommand: BaseCommand {
             "stop",
             "pps",
             "packets",
-            "self-packets"
+            "self-packets",
+            "item-spawns"
         ) + player.npe.buffer.keys.map { it.toString() }
     }
 

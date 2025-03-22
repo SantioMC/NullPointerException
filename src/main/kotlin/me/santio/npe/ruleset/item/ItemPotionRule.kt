@@ -2,6 +2,7 @@ package me.santio.npe.ruleset.item
 
 import com.github.retrooper.packetevents.protocol.component.ComponentTypes
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemPotionContents
+import com.github.retrooper.packetevents.protocol.potion.Potions
 import com.google.auto.service.AutoService
 import me.santio.npe.base.Processor
 import me.santio.npe.ruleset.Rule
@@ -22,7 +23,14 @@ class ItemPotionRule: GenericItemRule<ItemPotionContents>(
 ) {
 
     override fun check(processor: Processor, value: ItemPotionContents): Boolean {
-        return false
+        if (value.potion == null) return false
+
+        val potion = Potions.getByName(value.potion!!.name.toString())
+        if (potion == null) return false
+
+        return value.customEffects.isEmpty()
+            && value.customName == null
+            && value.customColor == null
     }
 
 }

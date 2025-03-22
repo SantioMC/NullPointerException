@@ -65,8 +65,11 @@ modules:
       # Completely disallows block entity data
       block-entity-data:
         enabled: true
-      # Completely disallows potion data (WIP)
+      # Completely disallows potion data, disabling allows all potion effects to be spawned
       potion-data:
+        enabled: true
+      # Limits how much ominous bottles can be amplified
+      ominous-bottle-data:
         enabled: true
       # Limit where player head textures can be found
       profile-data:

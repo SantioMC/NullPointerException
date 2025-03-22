@@ -8,11 +8,13 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientCreativeInventoryAction
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
 import com.google.auto.service.AutoService
+import com.google.gson.GsonBuilder
 import io.github.retrooper.packetevents.util.SpigotReflectionUtil
 import me.santio.npe.base.Module
 import me.santio.npe.base.Processor
 import me.santio.npe.base.Resolution
 import me.santio.npe.data.npe
+import me.santio.npe.inspection.PacketInspection
 import me.santio.npe.ruleset.RuleSet
 import me.santio.npe.ruleset.item.GenericItemRule
 import net.kyori.adventure.text.Component
@@ -62,6 +64,10 @@ class CreativeItemModule: Module(
 
         val item = wrapper.itemStack
         val player = event.getPlayer<Player>()
+
+        if (player.npe.debugging("item-spawns")) {
+            player.npe.sendDebug(PacketInspection.readItem(item), chat = true)
+        }
 
         // If the value is null, it might be that the player is holding the item in their cursor
         if (item.isEmpty) {
@@ -144,5 +150,10 @@ class CreativeItemModule: Module(
         }
     }
 
+    private companion object {
+        val gson = GsonBuilder()
+            .serializeNulls()
+            .create()
+    }
 
 }

@@ -4,12 +4,18 @@ import com.github.retrooper.packetevents.event.PacketEvent
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.github.retrooper.packetevents.event.PacketSendEvent
 import com.github.retrooper.packetevents.event.ProtocolPacketEvent
+import com.github.retrooper.packetevents.protocol.component.ComponentTypes
 import com.github.retrooper.packetevents.protocol.item.ItemStack
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import com.github.retrooper.packetevents.wrapper.PacketWrapper
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import me.santio.npe.helper.mm
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import org.bukkit.entity.Player
 import java.lang.invoke.MethodHandle
@@ -23,6 +29,10 @@ object PacketInspection {
     private val ignored = mutableSetOf<String>("copy", "read", "write")
     private val lookup: MethodHandles.Lookup = MethodHandles.lookup()
     private val serializer = LegacyComponentSerializer.legacyAmpersand()
+
+    private val gson: Gson = GsonBuilder()
+        .serializeNulls()
+        .create()
 
     // This is really stupid, but I don't believe there's a way to map the packet
     private fun getWrapperPacketClassName(wrapper: PacketTypeCommon): String {
@@ -189,5 +199,57 @@ object PacketInspection {
         return methodName.substring(index)
     }
 
+    /**
+     * Reads an ItemStack from PacketEvents and converts it to a nicely readable component
+     * @param item The item stack to read
+     * @return A component representing the item stack
+     */
+    fun readItem(item: ItemStack): Component {
+        if (item.isEmpty) return Component.text("AIR", NamedTextColor.GRAY)
 
+        var data = Component.empty()
+        val clipboard = StringBuilder()
+
+        data = data.append(Component.newline())
+        data = data.append(mm("<body>Amount: <primary><amount><br>", Placeholder.unparsed("amount", "" + item.amount)))
+        data = data.append(mm("<body>Components: <primary><count><br>", Placeholder.unparsed("count", "" + item.components.base.size)))
+
+        clipboard.append("""
+            Amount: ${item.amount}
+            Components: ${item.components.base.size}
+            
+        """.trimIndent())
+
+        for (component in ComponentTypes.values()) {
+            val componentData = item.getComponent(component)
+            if (componentData.isEmpty) continue
+
+            var value = try {
+                gson.toJson(componentData.get())
+            } catch (e: Exception) {
+                "${e.javaClass.simpleName}: ${e.message}"
+            }
+
+            clipboard.append("\n| ${component.name}\n${value}\n")
+
+            if (value.length > 2048) {
+                value = "Too long to display, please copy to clipboard"
+            }
+
+            data = data.append(mm(
+                "<br><primary>│ <body><name><br><white><value><br>",
+                Placeholder.unparsed("name", component.name.toString()),
+                Placeholder.unparsed("value", value)
+            ))
+        }
+
+        data = data.append(mm("<br><yellow>Click to copy to clipboard<br>"))
+        val hoverData = clipboard.toString()
+
+        return Component.text(item.type.name.toString(), NamedTextColor.GRAY)
+            .hoverEvent(HoverEvent.showText(data))
+            .clickEvent(ClickEvent.copyToClipboard(
+                hoverData.takeIf { it.length <= 20_480 } ?: hoverData.substring(0, 20_480)
+            ))
+    }
 }
