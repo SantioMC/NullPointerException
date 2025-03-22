@@ -3,6 +3,7 @@ package me.santio.npe.ruleset.item
 import com.github.retrooper.packetevents.protocol.component.ComponentTypes
 import com.github.retrooper.packetevents.protocol.component.builtin.item.BannerLayers
 import com.google.auto.service.AutoService
+import me.santio.npe.base.Processor
 import me.santio.npe.ruleset.Rule
 
 /**
@@ -16,13 +17,14 @@ import me.santio.npe.ruleset.Rule
 class ItemBannerRule: GenericItemRule<BannerLayers>(
     clazz = BannerLayers::class,
     componentType = ComponentTypes.BANNER_PATTERNS,
+    config = "banner-data",
     message = "Invalid Banner Data",
 ) {
-    override fun check(value: BannerLayers): Boolean {
-        return value.layers.size <= 16
+    override fun check(processor: Processor, value: BannerLayers): Boolean {
+        return value.layers.size <= config(processor, "max_layers", 16)
     }
 
-    override fun correct(value: BannerLayers): BannerLayers {
-        return BannerLayers(value.layers.take(16))
+    override fun correct(processor: Processor, value: BannerLayers): BannerLayers {
+        return BannerLayers(value.layers.take(config(processor, "max_layers", 16)))
     }
 }

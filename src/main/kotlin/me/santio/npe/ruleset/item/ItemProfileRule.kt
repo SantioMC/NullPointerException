@@ -5,6 +5,7 @@ import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemPro
 import com.google.auto.service.AutoService
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import me.santio.npe.base.Processor
 import me.santio.npe.inspection.URLInspector
 import me.santio.npe.ruleset.Rule
 import java.util.*
@@ -20,13 +21,16 @@ import java.util.*
 class ItemProfileRule: GenericItemRule<ItemProfile>(
     clazz = ItemProfile::class,
     componentType = ComponentTypes.PROFILE,
+    config = "profile-data",
     message = "Invalid Player Head Profile"
 ) {
 
     private val decoder = Base64.getDecoder()
     private val gson = Gson()
 
-    private fun validateTextures(value: String): Boolean {
+    private fun validateTextures(processor: Processor, value: String): Boolean {
+        val allowedDomains = config(processor, "allowed_domains", listOf("minecraft.net"))
+
         if (value.isBlank()) return false
         val decoded = String(decoder.decode(value))
 
@@ -40,24 +44,24 @@ class ItemProfileRule: GenericItemRule<ItemProfile>(
             if (url.contains("\n")) return false
 
             val data = URLInspector.inspect(url)
-            data.domain == "minecraft.net"
+            data.domain in allowedDomains
         } catch(e: Exception) {
             false
         }
     }
 
-    override fun check(value: ItemProfile): Boolean {
+    override fun check(processor: Processor, value: ItemProfile): Boolean {
         value.name?.let { name ->
             if (name.trim().isBlank()) return false
             if (name.length > 256) return false
         }
 
         // Check properties
-        if (value.properties.size > 8) return false // Too many properties
+        if (value.properties.size > config(processor, "max_properties_data", 8)) return false // Too many properties
 
         value.properties.forEach { property ->
             if (property.name.isBlank() || property.value.isBlank() || property.name.length > 128) return false
-            if (property.name == "textures" && !validateTextures(property.value)) return false
+            if (property.name == "textures" && !validateTextures(processor, property.value)) return false
             if (property.value.length > 2048) return false
         }
 

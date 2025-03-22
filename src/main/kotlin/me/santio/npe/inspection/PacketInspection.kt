@@ -3,13 +3,14 @@ package me.santio.npe.inspection
 import com.github.retrooper.packetevents.event.PacketEvent
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.github.retrooper.packetevents.event.PacketSendEvent
-import com.github.retrooper.packetevents.protocol.packettype.PacketType.Play
+import com.github.retrooper.packetevents.event.ProtocolPacketEvent
+import com.github.retrooper.packetevents.protocol.item.ItemStack
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import com.github.retrooper.packetevents.wrapper.PacketWrapper
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
-import org.bukkit.entity.Player
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
@@ -20,13 +21,14 @@ object PacketInspection {
 
     private val ignored = mutableSetOf<String>("copy", "read", "write")
     private val lookup: MethodHandles.Lookup = MethodHandles.lookup()
+    private val serializer = LegacyComponentSerializer.legacyAmpersand()
 
     // This is really stupid, but I don't believe there's a way to map the packet
     private fun getWrapperPacketClassName(wrapper: PacketTypeCommon): String {
         val value = wrapper as Enum<*>?
         val group = wrapper.javaClass.getName()
 
-        val namespace = group.substringBefore('$').replace("$", "")
+        val namespace = group.substringAfter('$').replace("$", "")
         val wrapperName = "Wrapper$namespace${toPascalCase(value!!.name)}".replace("ClientClient", "Client")
 
         val wrapperGroup = group.replace("protocol.packettype.PacketType", "wrapper")
@@ -82,6 +84,24 @@ object PacketInspection {
         }
     }
 
+    private fun readable(value: Any?): String {
+        if (value == null) return "null"
+
+        return when (value) {
+            is ItemStack -> value.type.name.toString()
+            is Optional<*> -> value.map { readable(it) }.orElse("Optional.empty()")
+            is Component -> serializer.serialize(value)
+            else -> {
+                val method = value.javaClass.getMethod("toString")
+                if (method.declaringClass == java.lang.Object::class.java) {
+                    return value.javaClass.simpleName
+                }
+
+                return value.toString()
+            }
+        }
+    }
+
     fun getData(wrapper: PacketWrapper<*>): MutableMap<String, String> {
         // Find all getters for the wrapper
         val methods = wrapper.javaClass.getDeclaredMethods()
@@ -92,11 +112,12 @@ object PacketInspection {
 
         for (method in methods) {
             if (ignored.contains(method.name) || method.parameterCount != 0) continue
+            method.isAccessible = true
 
             try {
                 val name = getGetterName(method.name).lowercase()
                 val value = method.invoke(wrapper)
-                data.put(name, value?.toString() ?: "null")
+                data.put(name, readable(value))
             } catch (e: InvocationTargetException) {
                 e.printStackTrace()
             } catch (e: IllegalAccessException) {
@@ -107,14 +128,13 @@ object PacketInspection {
         return data
     }
 
-    fun inspect(event: PacketEvent, packetType: PacketTypeCommon, player: Player): Component? {
-        val wrapper = getWrapper(event, packetType)
+    fun inspect(event: ProtocolPacketEvent): Component? {
+        val wrapper = getWrapper(event, event.packetType)
         if (wrapper == null) return null
 
         val data = getData(wrapper)
-        val isSent = packetType is Play.Server // Server -> Client
-
         var hover: Component = Component.newline()
+
         for (entry in data.entries) {
             hover = hover.append(
                 Component.text(entry.key, NamedTextColor.AQUA)
@@ -124,19 +144,10 @@ object PacketInspection {
             )
         }
 
-        return Component.text(player.name + ": ", NamedTextColor.GRAY)
-            .append(
-                Component.text(
-                    if (isSent) "<- " else "-> ",
-                    if (isSent) NamedTextColor.RED else NamedTextColor.GREEN
-                )
-            )
-            .append(
-                Component.text(
-                    toPascalCase(packetType.name),
-                    NamedTextColor.AQUA
-                )
-            ).hoverEvent(HoverEvent.showText(hover))
+        return Component.text(
+            toPascalCase(event.packetType.name),
+            NamedTextColor.AQUA
+        ).hoverEvent(HoverEvent.showText(hover))
     }
 
     /**

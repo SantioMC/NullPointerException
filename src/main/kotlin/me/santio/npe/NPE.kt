@@ -49,6 +49,7 @@ class NPE: JavaPlugin() {
     @Suppress("UnstableApiUsage")
     override fun onEnable() {
         this.dataPath.createDirectories()
+        this.saveDefaultConfig()
 
         database = Iron("jdbc:sqlite:${this.dataPath.resolve("data.db").toAbsolutePath()}") {
             defaultAdapters {

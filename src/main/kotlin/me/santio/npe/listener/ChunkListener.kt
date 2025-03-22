@@ -2,6 +2,7 @@ package me.santio.npe.listener
 
 import com.google.auto.service.AutoService
 import io.papermc.paper.event.packet.PlayerChunkLoadEvent
+import me.santio.npe.config.config
 import me.santio.npe.data.npe
 import org.bukkit.Chunk
 import org.bukkit.Location
@@ -17,7 +18,7 @@ import kotlin.math.min
 @AutoService(Listener::class)
 class ChunkListener: Listener {
 
-    private fun isTooFarOutside(chunk: Chunk, buffer: Int = BORDER_BUFFER): Boolean {
+    private fun isTooFarOutside(chunk: Chunk, buffer: Int): Boolean {
         val worldBorder = chunk.world.worldBorder
         val borderSize = (worldBorder.size / 2.0) + buffer
 
@@ -42,16 +43,20 @@ class ChunkListener: Listener {
 
     @EventHandler(priority = EventPriority.LOW)
     private fun onChunkLoad(event: PlayerChunkLoadEvent) {
-        if (!isTooFarOutside(event.chunk)) return
+        val buffer = config("modules.chunk-loading.buffer", 250)
+
+        if (!isTooFarOutside(event.chunk, buffer)) return
+        if (!config("modules.chunk-loading.enabled", true)) return
 
         val chunkLocX = event.chunk.x shl 4
         val chunkLocZ = event.chunk.z shl 4
         val worldBorder = event.chunk.world.worldBorder
-        val borderSize = (worldBorder.size / 2.0) + BORDER_BUFFER
+        val borderSize = (worldBorder.size / 2.0) + buffer
 
         event.player.npe.flag(
             event.player,
             "illegal chunk load",
+            disconnect = config("modules.chunk-loading.resolution", "kick") == "kick",
         ) {
             "chunkX" to chunkLocX
             "chunkZ" to chunkLocZ
@@ -63,11 +68,8 @@ class ChunkListener: Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     private fun onSpawn(event: PlayerSpawnLocationEvent) {
         if (!isTooFarOutside(event.player.location.chunk, buffer = 0)) return
+        if (!config("modules.chunk-loading.send_back_inside_border", true)) return
         event.spawnLocation = constraintLocation(event.spawnLocation)
-    }
-
-    companion object {
-        private const val BORDER_BUFFER = 250
     }
 
 }

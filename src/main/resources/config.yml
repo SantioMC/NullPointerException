@@ -1,0 +1,76 @@
+#
+# NullPointerException
+#
+# NPE (NullPointerException) is a Minecraft plugin that aims to prevent
+# players from crashing or causing harm to the server by intercepting all
+# packets sent by the client.
+#
+# This configuration file allows for customization of the entire plugin down to
+# each attribute of when modules are flagged.
+#
+
+#
+# The following section is for customization of all modules, processors, and flags
+# that are used by the plugin, keys are named in a way that should hopefully be as
+# self-explanatory as possible, but if you're unsure then the default values should
+# be fine.
+#
+# Each rule comes with two options regardless of what it is, which are the following:
+#   enabled: Whether the rule is enabled or not
+#   resolution: What to do when the rule is triggered, either kick (disconnect player), cancel (cancel the packet), or ignore
+#
+# If not specified, the default is enabled, resolution depends on the rule, but is either
+# kick or cancel.
+#
+# If a duration is specified, the value will **always** be in ticks (20 ticks = 1 second).
+#
+modules:
+  # Detection against massive packet sizes
+  packet-size:
+    enabled: true
+    resolution: kick
+    max_bytes: 64000
+    max_creative_item_bytes: 1024
+  # Detection against a large influx of packets in a short period of time
+  packet-flood:
+    enabled: true
+    resolution: kick
+    max_packets_per_second: 30
+    flood_window: 3
+    hard_limit_per_second: 1000
+    max_empty_creative_item_packets_per_second: 920
+  # Prevents players from loading chunks that are too far outside the world border
+  # ! Can not be cancelled, use either `kick` or `ignore` resolution
+  chunk-loading:
+    enabled: true
+    resolution: kick
+    buffer: 250
+    send_back_inside_border: true
+  # Detection against spawning in irregular items from creative mode
+  illegal-items:
+    enabled: true
+    resolution: cancel
+    notify_client_on_cancel: true
+    #
+    # Rules are per item-component rules on when the component is allowed to stay on
+    # the item stack. NullPointerException prevents some components from being added
+    # at all. Each rule comes with an `enabled` option, if disabled then the component
+    # will be copied as-is without any checks.
+    #
+    rules:
+      # Limits how many banner layers are allowed
+      banner-data:
+        enabled: true
+        max_layers: 16
+      # Completely disallows block entity data
+      block-entity-data:
+        enabled: true
+      # Completely disallows potion data (WIP)
+      potion-data:
+        enabled: true
+      # Limit where player head textures can be found
+      profile-data:
+        enabled: true
+        max_properties_data: 8
+        allowedDomains:
+          - minecraft.net

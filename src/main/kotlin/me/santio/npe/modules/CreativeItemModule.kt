@@ -1,6 +1,5 @@
-package me.santio.npe.processor
+package me.santio.npe.modules
 
-import com.github.retrooper.packetevents.event.PacketListenerPriority
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.github.retrooper.packetevents.netty.buffer.ByteBufHelper
 import com.github.retrooper.packetevents.protocol.item.ItemStack
@@ -10,7 +9,9 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientCr
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
 import com.google.auto.service.AutoService
 import io.github.retrooper.packetevents.util.SpigotReflectionUtil
+import me.santio.npe.base.Module
 import me.santio.npe.base.Processor
+import me.santio.npe.base.Resolution
 import me.santio.npe.data.npe
 import me.santio.npe.ruleset.RuleSet
 import me.santio.npe.ruleset.item.GenericItemRule
@@ -20,7 +21,12 @@ import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.entity.Player
 
 @AutoService(Processor::class)
-class ItemProcessor: Processor("Illegal Items", clone = false, priority = PacketListenerPriority.LOW) {
+class CreativeItemModule: Module(
+    id = "Illegal Items",
+    description = "Spawning in irregular items",
+    config = "illegal-items",
+    clone = false
+) {
 
     override fun filter(): List<PacketTypeCommon> {
         return listOf(
@@ -31,10 +37,16 @@ class ItemProcessor: Processor("Illegal Items", clone = false, priority = Packet
     private fun <T: Any>copyComponent(original: ItemStack, new: ItemStack, rule: GenericItemRule<T>) {
         val originalComponent = original.getComponent(rule.componentType)
         if (originalComponent.isPresent) {
+            if (!rule.config(this, "enabled", true)) {
+                // Skip rule, just copy the component
+                new.setComponent(rule.componentType, originalComponent.get())
+                return
+            }
+
             // only copy if it matches rule
-            if (!rule.check(originalComponent.get())) {
+            if (!rule.check(this, originalComponent.get())) {
                 // See if we can correct it
-                val corrected = rule.correct(originalComponent.get()) ?: return
+                val corrected = rule.correct(this, originalComponent.get()) ?: return
                 new.setComponent(rule.componentType, corrected)
             } else {
                 // All good, just copy it
@@ -50,8 +62,6 @@ class ItemProcessor: Processor("Illegal Items", clone = false, priority = Packet
 
         val item = wrapper.itemStack
         val player = event.getPlayer<Player>()
-
-        if (player.npe.bypassing()) return
 
         // If the value is null, it might be that the player is holding the item in their cursor
         if (item.isEmpty) {
@@ -75,7 +85,7 @@ class ItemProcessor: Processor("Illegal Items", clone = false, priority = Packet
             .build()
 
         // Add allowed components through
-        val rules = RuleSet.rules(RuleSet.PacketItem)
+        val rules = RuleSet.Companion.rules(RuleSet.PacketItem)
             .filterIsInstance(GenericItemRule::class.java)
 
         rules.forEach { rule ->
@@ -84,14 +94,10 @@ class ItemProcessor: Processor("Illegal Items", clone = false, priority = Packet
 
         // Check if it has changed in any way
         if (item != wrapper.itemStack) {
-            wrapper.write()
-            event.markForReEncode(true)
-
             val extra = Component.text("Click to copy Item Data", NamedTextColor.YELLOW)
             flag(
                 event,
-                disconnect = false,
-                cancelEvent = false,
+                Resolution.CANCEL,
                 extra = extra,
                 clickEvent = ClickEvent.copyToClipboard(item.toString())
             ) {
@@ -99,14 +105,23 @@ class ItemProcessor: Processor("Illegal Items", clone = false, priority = Packet
                 "item" to item.type.name
             }
 
-            val packet = WrapperPlayServerSetSlot(
-                0,
-                0,
-                wrapper.slot,
-                wrapper.itemStack
-            )
+            if (!player.npe.bypassing()) {
+                // Rewrite the packet on the server
+                wrapper.write()
+                event.markForReEncode(true)
 
-            event.user.sendPacket(packet)
+                // Notify the client
+                if (config("notify_client_on_cancel", true)) {
+                    val packet = WrapperPlayServerSetSlot(
+                        0,
+                        0,
+                        wrapper.slot,
+                        wrapper.itemStack
+                    )
+
+                    event.user.sendPacket(packet)
+                }
+            }
         }
     }
 

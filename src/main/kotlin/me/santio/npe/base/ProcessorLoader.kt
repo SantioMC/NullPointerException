@@ -2,10 +2,12 @@ package me.santio.npe.base
 
 import com.github.retrooper.packetevents.PacketEvents
 import me.santio.npe.NPE
+import org.slf4j.LoggerFactory
 import java.util.*
 
 object ProcessorLoader {
 
+    private val logger = LoggerFactory.getLogger(ProcessorLoader::class.java)
     val loaded = mutableSetOf<Processor>()
 
     fun load() {
@@ -18,6 +20,11 @@ object ProcessorLoader {
         )
 
         loader.forEach {
+            if (!it.config("enabled", true)) {
+                logger.info("Skipping disabled processor ${it.id}, you can enable it with: modules.${it.config}.enabled")
+                return@forEach
+            }
+
             if (it is Module) modules++
             else processors++
 
@@ -25,6 +32,7 @@ object ProcessorLoader {
                 it,
                 it.priority
             )
+
             loaded.add(it)
         }
 

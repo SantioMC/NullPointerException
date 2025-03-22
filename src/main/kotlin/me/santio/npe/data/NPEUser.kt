@@ -66,7 +66,14 @@ data class NPEUser(
      * @param message the message to send
      */
     fun sendDebug(message: String, chat: Boolean = false) {
-        val message = NPE.miniMessage.deserialize(message).color(NamedTextColor.GRAY)
+        sendDebug(NPE.miniMessage.deserialize(message).color(NamedTextColor.GRAY), chat)
+    }
+
+    /**
+     * Send a debug component message to the user
+     * @param message the message to send
+     */
+    fun sendDebug(message: Component, chat: Boolean = false) {
         val component = Component.text("\uD83E\uDDEA ", NPE.debugColor).append(message)
 
         if (chat) player()?.sendMessage(component)
@@ -166,12 +173,20 @@ data class NPEUser(
             serializer.serialize(it).length <= 2048
         }?.let { hover = hover.append(Component.newline().append(it)) }
 
-        val alert = Component.empty()
+        var alert = Component.empty()
             .append(Component.text(player.name, NamedTextColor.RED))
             .append(Component.text(" was detected for ", NamedTextColor.GRAY))
             .append(Component.text(id, NamedTextColor.YELLOW))
             .hoverEvent(hover)
-            .clickEvent(clickEvent)
+
+        // Trim the click event if it's too long
+        if (clickEvent != null && clickEvent.action() == ClickEvent.Action.COPY_TO_CLIPBOARD) {
+            alert = if (clickEvent.value().length <= 10_000) {
+                alert.clickEvent(clickEvent)
+            } else {
+                alert.clickEvent(ClickEvent.copyToClipboard(clickEvent.value().take(10_000)))
+            }
+        }
 
         NPE.broadcast(alert)
     }
@@ -206,7 +221,7 @@ data class NPEUser(
         /**
          * A holding of all users registered with NPE
          */
-        internal val users = mutableMapOf<UUID, NPEUser>()
+        internal val users = ConcurrentHashMap<UUID, NPEUser>()
 
         /**
          * Get or create a [NPEUser] for the specified [player]

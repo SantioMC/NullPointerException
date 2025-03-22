@@ -8,7 +8,7 @@ import org.bukkit.entity.Player
 import java.util.concurrent.TimeUnit
 
 @AutoService(Processor::class)
-class RateProcessor: Processor("Packet Rate") {
+class RateProcessor: Processor("Packet Rate", "packet-rate") {
     override fun getPacket(event: PacketReceiveEvent) {
         val player = event.getPlayer<Player>()
         val pps = player.npe.pps(event.packetType).incrementAndGet()
