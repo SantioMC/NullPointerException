@@ -9,9 +9,8 @@ autoservice-google = "1.1.1"
 autoservice-ksp = "1.2.0"
 cloud = "2.0.0"
 cloud-paper = "2.0.0-beta.10"
-iron = "f77a1ccb6a"
-flyway = "10.16.0"
-sqlite = "3.47.1.0"
+hibernate = "6.6.7.Final"
+h2 = "2.3.232"
 
 [plugins]
 pluginyml = { id = "net.minecrell.plugin-yml.paper", version.ref = "pluginyml" }
@@ -30,10 +29,9 @@ cloud-annotations = { module = "org.incendo:cloud-annotations", version.ref = "c
 cloud-kotlin = { module = "org.incendo:cloud-kotlin-coroutines-annotations", version.ref = "cloud" }
 cloud-paper = { module = "org.incendo:cloud-paper", version.ref = "cloud-paper" }
 
-sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
-flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
-iron = { module = "gg.ingot.iron:iron", version.ref = "iron" }
+hibernate = { module = "org.hibernate:hibernate-core", version.ref = "hibernate" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
 
 [bundles]
 cloud = ["cloud-core", "cloud-annotations", "cloud-kotlin", "cloud-paper"]
-database = ["sqlite", "flyway-core", "iron"]
+database = ["hibernate", "h2"]

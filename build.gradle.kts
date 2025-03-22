@@ -25,7 +25,6 @@ dependencies {
     compileOnly(libs.paper)
 
     implementation(libs.bundles.database)
-    ksp(libs.iron)
 
     ksp(libs.autoservice.ksp)
     compileOnly(libs.autoservice.google)
@@ -66,6 +65,7 @@ kotlin {
 
 tasks.shadowJar {
     mergeServiceFiles()
+    minimize()
     archiveFileName.set("NullPointerException.jar")
 }
 

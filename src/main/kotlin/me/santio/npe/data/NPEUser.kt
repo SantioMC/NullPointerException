@@ -6,7 +6,6 @@ import me.santio.npe.NPE
 import me.santio.npe.base.BufferKey
 import me.santio.npe.base.FlagData
 import me.santio.npe.base.Processor
-import me.santio.npe.database.UserData
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
@@ -196,10 +195,10 @@ data class NPEUser(
      */
     suspend fun load() {
         try {
-            data = NPE.database.prepare(
-                "SELECT * FROM user_settings WHERE id = ?",
-                uniqueId.toString()
-            ).singleNullable() ?: UserData(uniqueId)
+            data = NPE.database.get<UserData>(
+                "FROM user_data WHERE id = :id",
+                mapOf("id" to uniqueId)
+            ) ?: UserData(uniqueId)
         } catch (e: Exception) {
             NPE.logger.error("Failed to load user data for '{}'", uniqueId, e)
         }
@@ -209,10 +208,9 @@ data class NPEUser(
      * Saves the user's settings to the database
      */
     suspend fun save() {
-        NPE.database.prepare(
-            "REPLACE INTO user_settings(id, alerts, ignore_bypass) VALUES (:uuid, :alerts, :ignoreBypass)",
-            data.bindings()
-        )
+        NPE.database.useSession {
+            it.persist(data)
+        }
     }
 
     companion object {

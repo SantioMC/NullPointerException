@@ -2,16 +2,16 @@ package me.santio.npe
 
 import com.github.retrooper.packetevents.PacketEvents
 import com.github.retrooper.packetevents.settings.PacketEventsSettings
-import gg.ingot.iron.Iron
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder
 import kotlinx.coroutines.runBlocking
 import me.santio.npe.base.ProcessorLoader
 import me.santio.npe.command.BaseCommand
 import me.santio.npe.data.NPEUser
 import me.santio.npe.data.PacketDumper
+import me.santio.npe.data.UserData
 import me.santio.npe.data.npe
-import me.santio.npe.database.Database
-import me.santio.npe.database.column.UUIDAdapter
+import me.santio.npe.database.HibernateConfig
+import me.santio.npe.database.HibernateDriver
 import me.santio.npe.ruleset.RuleSet
 import me.santio.npe.tasks.BufferResetTask
 import net.kyori.adventure.text.Component
@@ -33,6 +33,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.io.path.createDirectories
+import kotlin.io.path.createFile
+import kotlin.io.path.exists
 
 
 class NPE: JavaPlugin() {
@@ -51,18 +53,18 @@ class NPE: JavaPlugin() {
         this.dataPath.createDirectories()
         this.saveDefaultConfig()
 
-        database = Iron("jdbc:sqlite:${this.dataPath.resolve("data.db").toAbsolutePath()}") {
-            defaultAdapters {
-                adapter(UUID::class, UUIDAdapter)
-            }
-        }.connect()
+        val dbFile = this.dataPath.resolve("data.db").toAbsolutePath()
+        if (!dbFile.exists()) dbFile.createFile()
+
+        database = HibernateDriver().connect(HibernateConfig(
+            url = "jdbc:h2:file:${dbFile}"
+        )).registerEntities(UserData::class.java)
 
         commandManager = PaperCommandManager.builder<Source>(PaperSimpleSenderMapper.simpleSenderMapper())
             .executionCoordinator(ExecutionCoordinator.asyncCoordinator<Source>())
             .buildOnEnable(this)
         val annotationParser = AnnotationParser(commandManager, Source::class.java)
 
-        Database.migrate()
         ProcessorLoader.load()
         RuleSet.loadRules()
         PacketDumper.create()
@@ -76,7 +78,6 @@ class NPE: JavaPlugin() {
         }
 
         PacketEvents.getAPI().init();
-
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, BufferResetTask, 20L, 20L)
     }
 
@@ -87,6 +88,8 @@ class NPE: JavaPlugin() {
             for (player in NPEUser.users.values) {
                 player.save()
             }
+
+            database.close()
         }
     }
 
@@ -117,7 +120,7 @@ class NPE: JavaPlugin() {
             .postProcessor { component -> component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE) }
             .build()
 
-        lateinit var database: Iron
+        lateinit var database: HibernateDriver
         lateinit var commandManager: PaperCommandManager<Source>
 
         fun broadcast(message: Component) {
