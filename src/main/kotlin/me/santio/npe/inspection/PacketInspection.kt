@@ -11,6 +11,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+import org.bukkit.entity.Player
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
@@ -102,11 +103,12 @@ object PacketInspection {
         }
     }
 
-    fun getData(wrapper: PacketWrapper<*>): MutableMap<String, String> {
+    fun getData(player: String, wrapper: PacketWrapper<*>): MutableMap<String, String> {
         // Find all getters for the wrapper
         val methods = wrapper.javaClass.getDeclaredMethods()
 
         val data: MutableMap<String, String> = mutableMapOf(
+            "player" to player,
             "wrapper" to wrapper.javaClass.getSimpleName()
         )
 
@@ -132,7 +134,8 @@ object PacketInspection {
         val wrapper = getWrapper(event, event.packetType)
         if (wrapper == null) return null
 
-        val data = getData(wrapper)
+        val player = event.getPlayer<Player>()?.name ?: "null"
+        val data = getData(player, wrapper)
         var hover: Component = Component.newline()
 
         for (entry in data.entries) {

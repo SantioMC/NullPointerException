@@ -9,6 +9,7 @@ import me.santio.npe.base.Processor
 import me.santio.npe.data.NPEUser
 import me.santio.npe.helper.not
 import me.santio.npe.inspection.PacketInspection
+import org.bukkit.entity.Player
 
 @Suppress("DuplicatedCode")
 @AutoService(Processor::class)
@@ -56,12 +57,15 @@ class LogProcessor: Processor("Logger", "log-processor") {
 
     override fun getPacket(event: PacketReceiveEvent) {
         if (event.packetType in spamPackets) return
-        if (NPEUser.users.none { it.value.debugging("packets") }) return
+        if (NPEUser.users.none { it.value.debugging("packets") || it.value.debugging("self-packets") }) return
 
         val component = PacketInspection.inspect(event) ?: return
 
         for (user in NPEUser.users.values) {
-            if (user.debugging("packets")) {
+            val isSelf = event.getPlayer<Player>() == user.player()
+            val debugging = user.debugging("packets") || (user.debugging("self-packets") && isSelf)
+
+            if (debugging) {
                 user.sendDebug(receiveComponent.append(component), chat = true)
             }
         }
@@ -69,12 +73,15 @@ class LogProcessor: Processor("Logger", "log-processor") {
 
     override fun sendPacket(event: PacketSendEvent) {
         if (event.packetType in spamPackets) return
-        if (NPEUser.users.none { it.value.debugging("packets") }) return
+        if (NPEUser.users.none { it.value.debugging("packets") || it.value.debugging("self-packets") }) return
 
         val component = PacketInspection.inspect(event) ?: return
 
         for (user in NPEUser.users.values) {
-            if (user.debugging("packets")) {
+            val isSelf = event.getPlayer<Player>() == user.player()
+            val debugging = user.debugging("packets") || (user.debugging("self-packets") && isSelf)
+
+            if (debugging) {
                 user.sendDebug(sendComponent.append(component), chat = true)
             }
         }

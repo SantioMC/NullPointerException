@@ -19,7 +19,7 @@ object PacketDumper {
     fun dump(packet: PacketReceiveEvent) {
         val player = packet.user.name
         val wrapper = PacketInspection.getWrapper(packet, packet.packetType) ?: return
-        val data = PacketInspection.getData(wrapper)
+        val data = PacketInspection.getData(player, wrapper)
 
         dump.appendText("$player: ${wrapper.javaClass.simpleName}\n")
         dump.appendText(data.entries.joinToString("\n") {
