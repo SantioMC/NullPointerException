@@ -95,7 +95,7 @@ object PacketInspection {
         }
     }
 
-    private fun readable(value: Any?): String {
+    fun readable(value: Any?): String {
         if (value == null) return "null"
 
         return when (value) {
@@ -251,5 +251,32 @@ object PacketInspection {
             .clickEvent(ClickEvent.copyToClipboard(
                 hoverData.takeIf { it.length <= 20_480 } ?: hoverData.substring(0, 20_480)
             ))
+    }
+
+    /**
+     * Gets the different components between two item-stacks
+     * @param original The original item-stack
+     * @param expected The expected item-stack
+     * @return The different components between the two item-stacks
+     */
+    fun diff(original: ItemStack, expected: ItemStack): List<ComponentDiff> {
+        val diff = mutableListOf<ComponentDiff>()
+
+        for (component in ComponentTypes.values()) {
+            val originalComponent = original.getComponent(component)
+            val expectedComponent = expected.getComponent(component)
+
+            if (originalComponent.isEmpty && expectedComponent.isEmpty) {
+                continue
+            } else if (originalComponent.isPresent && expectedComponent.isEmpty) {
+                diff.add(ComponentDiff.Extra(component))
+            } else if (originalComponent.isEmpty && expectedComponent.isPresent) {
+                diff.add(ComponentDiff.Missing(component))
+            } else if (originalComponent.get() != expectedComponent.get()) {
+                diff.add(ComponentDiff.Mismatch(originalComponent.get(), expectedComponent.get()))
+            }
+        }
+
+        return diff
     }
 }

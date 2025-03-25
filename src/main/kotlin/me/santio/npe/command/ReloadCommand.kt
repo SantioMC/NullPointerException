@@ -2,7 +2,6 @@ package me.santio.npe.command
 
 import com.google.auto.service.AutoService
 import me.santio.npe.NPE
-import me.santio.npe.base.ProcessorLoader
 import me.santio.npe.helper.not
 import org.incendo.cloud.annotations.Command
 import org.incendo.cloud.annotations.CommandDescription
@@ -15,9 +14,13 @@ class ReloadCommand: BaseCommand {
     @Command("npe reload")
     @Permission("npe.reload")
     @CommandDescription("Reload all of NPEs configuration live")
-    fun toggleBypass(sender: PlayerSource) {
-        NPE.instance.reloadConfig()
-        sender.source().sendMessage(!"<body>You have <primary>successfully</primary> reloaded NPEs configuration")
+    fun reload(sender: PlayerSource) {
+        try {
+            NPE.instance.reloadConfig()
+            sender.source().sendMessage(!"<body>You have <primary>successfully</primary> reloaded NPEs configuration")
+        } catch (_: Exception) {
+            sender.source().sendMessage(!"<body>Failed to reload NPEs configuration, see the console for information")
+        }
     }
 
 }

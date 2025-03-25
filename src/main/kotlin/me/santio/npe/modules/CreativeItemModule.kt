@@ -8,7 +8,6 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientCreativeInventoryAction
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
 import com.google.auto.service.AutoService
-import com.google.gson.GsonBuilder
 import io.github.retrooper.packetevents.util.SpigotReflectionUtil
 import me.santio.npe.base.Module
 import me.santio.npe.base.Processor
@@ -36,25 +35,28 @@ class CreativeItemModule: Module(
         )
     }
 
-    private fun <T: Any>copyComponent(original: ItemStack, new: ItemStack, rule: GenericItemRule<T>) {
+    private fun <T: Any>copyComponent(original: ItemStack, new: ItemStack, rule: GenericItemRule<T>): Boolean {
         val originalComponent = original.getComponent(rule.componentType)
         if (originalComponent.isPresent) {
             if (!rule.config(this, "enabled", true)) {
                 // Skip rule, just copy the component
                 new.setComponent(rule.componentType, originalComponent.get())
-                return
+                return true
             }
 
             // only copy if it matches rule
             if (!rule.check(this, originalComponent.get())) {
                 // See if we can correct it
-                val corrected = rule.correct(this, originalComponent.get()) ?: return
+                val corrected = rule.correct(this, originalComponent.get()) ?: return false
                 new.setComponent(rule.componentType, corrected)
+                return false
             } else {
                 // All good, just copy it
                 new.setComponent(rule.componentType, originalComponent.get())
             }
         }
+
+        return true
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -66,7 +68,7 @@ class CreativeItemModule: Module(
         val player = event.getPlayer<Player>()
 
         if (player.npe.debugging("item-spawns")) {
-            player.npe.sendDebug(PacketInspection.readItem(item), chat = true)
+            player.npe.sendDebug(PacketInspection.readItem(item.copy()), chat = true)
         }
 
         // If the value is null, it might be that the player is holding the item in their cursor
@@ -94,12 +96,14 @@ class CreativeItemModule: Module(
         val rules = RuleSet.Companion.rules(RuleSet.PacketItem)
             .filterIsInstance(GenericItemRule::class.java)
 
-        rules.forEach { rule ->
-            copyComponent(item, wrapper.itemStack, rule)
-        }
+        val failed = rules.map { rule ->
+            copyComponent(item, wrapper.itemStack, rule) to rule
+        }.filter { !it.first }.map { it.second }
 
         // Check if it has changed in any way
         if (item != wrapper.itemStack) {
+            val diff = PacketInspection.diff(item, wrapper.itemStack)
+
             val extra = Component.text("Click to copy Item Data", NamedTextColor.YELLOW)
             flag(
                 event,
@@ -109,6 +113,9 @@ class CreativeItemModule: Module(
             ) {
                 "itemSize" to ByteBufHelper.readableBytes(buffer)
                 "item" to item.type.name
+                if (failed.isNotEmpty()) {
+                    "violations" to "\n" + failed.joinToString("\n") { " - ${it.message}" }
+                }
             }
 
             if (!player.npe.bypassing()) {
@@ -148,12 +155,6 @@ class CreativeItemModule: Module(
             rawSlot == 45 -> 40
             else -> rawSlot
         }
-    }
-
-    private companion object {
-        val gson = GsonBuilder()
-            .serializeNulls()
-            .create()
     }
 
 }

@@ -6,6 +6,6 @@ abstract class Module(
     override val id: String,
     val description: String,
     override val config: String,
-    override val clone: Boolean = true,
+    override val clone: Boolean = false,
     override val priority: PacketListenerPriority = PacketListenerPriority.NORMAL,
 ): Processor(id, config, clone, priority)
