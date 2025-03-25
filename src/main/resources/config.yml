@@ -31,6 +31,7 @@ modules:
     resolution: kick
     max_bytes: 64000
     max_creative_item_bytes: 1024
+    notify_client_on_item_cancel: true
   # Detection against a large influx of packets in a short period of time
   packet-flood:
     enabled: true

@@ -65,6 +65,10 @@ abstract class Processor(
         return null
     }
 
+    protected fun resolution(default: Resolution = Resolution.KICK): Resolution {
+        return this@Processor.config("resolution", default)
+    }
+
     open fun flag(
         event: PacketReceiveEvent,
         resolution: Resolution = Resolution.KICK,
@@ -75,7 +79,7 @@ abstract class Processor(
         val player = event.getPlayer<Player>()
         if (player == null) return
 
-        val resolution = this@Processor.config("resolution", resolution)
+        val resolution = resolution(resolution)
         if (resolution.shouldCancel && !player.npe.bypassing()) event.isCancelled = true
 
         event.getPlayer<Player>().npe.flag(
