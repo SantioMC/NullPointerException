@@ -46,6 +46,8 @@ class PacketFloodModule: Module(
                 // We want to increase the buffer before we flag the packet
                 maxPacketsPerSecond = config("max_empty_creative_item_packets_per_second", 920)
             }
+        } else if (event.packetType == PacketType.Play.Client.TAB_COMPLETE) {
+            maxPacketsPerSecond = config("max_tab_complete_packets_per_second", 60)
         }
 
         // Check if any individual packets are over the limit

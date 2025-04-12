@@ -9,13 +9,16 @@ import me.santio.npe.NPE
 import me.santio.npe.base.BufferKey
 import me.santio.npe.base.FlagData
 import me.santio.npe.base.Processor
+import me.santio.npe.io.BoundedOutputStream
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.nio.file.Path
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -23,6 +26,7 @@ import kotlin.io.path.*
 import com.github.retrooper.packetevents.protocol.item.ItemStack as PacketItemStack
 
 data class NPEUser(
+    val username: String,
     val uniqueId: UUID,
 ) {
 
@@ -31,6 +35,9 @@ data class NPEUser(
     private val packetRate: MutableMap<PacketTypeCommon, AtomicLong> = ConcurrentHashMap()
     private var debug: String? = null
 
+    val violations: MutableMap<String, Long> = ConcurrentHashMap()
+    var lastPacket: PacketLogData? = null
+    val logBuffer: BoundedOutputStream = BoundedOutputStream(1048576) // 1MB
     val buffer: MutableMap<BufferKey, AtomicLong> = ConcurrentHashMap()
     var creativeCursorSlot: PacketItemStack? = null
 
@@ -71,6 +78,15 @@ data class NPEUser(
      */
     fun sendDebug(message: String, chat: Boolean = false) {
         sendDebug(NPE.miniMessage.deserialize(message).color(NamedTextColor.GRAY), chat)
+    }
+
+    /**
+     * Log data to the player buffer
+     * @param data the data to log
+     */
+    fun log(data: String) {
+        val time = formatter.format(Date())
+        logBuffer.write(("[$time] $data\n").toByteArray())
     }
 
     /**
@@ -151,6 +167,7 @@ data class NPEUser(
         val user = PacketEvents.getAPI().playerManager.getUser(player)
         if (user == null) return
 
+        this.violations.put(id, this.violations.getOrDefault(id, 0L) + 1)
         val flagData = FlagData().apply(data)
 
         // Permission check
@@ -174,7 +191,7 @@ data class NPEUser(
         }
 
         extra?.takeIf {
-            serializer.serialize(it).length <= 2048
+            jsonSerializer.serialize(it).length <= 2048
         }?.let { hover = hover.append(Component.newline().append(it)) }
 
         var alert = Component.empty()
@@ -192,6 +209,7 @@ data class NPEUser(
             }
         }
 
+        this.log(plainSerializer.serialize(alert) + "\n" + plainSerializer.serialize(hover) + "\n")
         NPE.broadcast(alert)
     }
 
@@ -220,14 +238,24 @@ data class NPEUser(
             val path = getPath()
 
             if (!path.parent.exists()) path.parent.createDirectories()
+            if (!path.exists() && !data.hasData()) return@withContext // Don't save if there's no data
+
             if (!path.exists()) path.createFile()
 
-            path.writeText(gson.toJson(data))
+            if (data.hasData()) {
+                path.writeText(gson.toJson(data))
+            } else {
+                path.deleteExisting()
+            }
         }
     }
 
     companion object {
-        private val serializer = JSONComponentSerializer.json();
+        private val formatter = SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
+
+        private val plainSerializer = PlainTextComponentSerializer.plainText()
+        private val jsonSerializer = JSONComponentSerializer.json();
+
         private val gson = GsonBuilder()
             .serializeNulls()
             .create()
@@ -245,7 +273,7 @@ data class NPEUser(
         fun getOrCreate(player: Player): NPEUser {
             val uniqueId = player.uniqueId
             return users.getOrPut(uniqueId) {
-                NPEUser(uniqueId)
+                NPEUser(player.name, uniqueId)
             }
         }
     }

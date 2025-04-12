@@ -1,19 +1,28 @@
 package me.santio.npe.processor
 
+import com.github.retrooper.packetevents.event.PacketListenerPriority
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.github.retrooper.packetevents.event.PacketSendEvent
+import com.github.retrooper.packetevents.netty.buffer.ByteBufHelper
 import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import com.google.auto.service.AutoService
+import io.netty.buffer.ByteBuf
 import me.santio.npe.base.Processor
 import me.santio.npe.data.NPEUser
+import me.santio.npe.data.PacketLogData
+import me.santio.npe.data.npe
 import me.santio.npe.helper.not
 import me.santio.npe.inspection.PacketInspection
 import org.bukkit.entity.Player
 
 @Suppress("DuplicatedCode")
 @AutoService(Processor::class)
-class LogProcessor: Processor("Logger", "log-processor") {
+class LogProcessor: Processor(
+    "Logger",
+    "log-processor",
+    priority = PacketListenerPriority.LOWEST
+) {
 
     private val sendComponent = !"<#8cd17d>\uD83E\uDC18 "
     private val receiveComponent = !"<#d1847d>\uD83E\uDC1A "
@@ -24,10 +33,8 @@ class LogProcessor: Processor("Logger", "log-processor") {
         PacketType.Play.Client.PLAYER_POSITION_AND_ROTATION,
         PacketType.Play.Client.PLAYER_ROTATION,
         PacketType.Play.Client.KEEP_ALIVE,
-        PacketType.Play.Client.PLAYER_INPUT,
-        PacketType.Play.Client.ENTITY_ACTION,
-        PacketType.Play.Client.TAB_COMPLETE,
         PacketType.Play.Client.PONG,
+        PacketType.Play.Client.CLIENT_TICK_END,
         PacketType.Play.Server.PING,
         PacketType.Play.Server.CHUNK_DATA,
         PacketType.Play.Server.ENTITY_POSITION_SYNC,
@@ -35,10 +42,8 @@ class LogProcessor: Processor("Logger", "log-processor") {
         PacketType.Play.Server.UPDATE_HEALTH,
         PacketType.Play.Server.ENTITY_RELATIVE_MOVE_AND_ROTATION,
         PacketType.Play.Server.ENTITY_RELATIVE_MOVE,
-        PacketType.Play.Server.TAB_COMPLETE,
         PacketType.Play.Server.ENTITY_VELOCITY,
         PacketType.Play.Server.TIME_UPDATE,
-        PacketType.Play.Server.PLAYER_INFO_UPDATE,
         PacketType.Play.Server.UNLOAD_CHUNK,
         PacketType.Play.Server.UPDATE_VIEW_POSITION,
         PacketType.Play.Server.BUNDLE,
@@ -57,8 +62,13 @@ class LogProcessor: Processor("Logger", "log-processor") {
 
     override fun getPacket(event: PacketReceiveEvent) {
         if (event.packetType in spamPackets) return
-        if (NPEUser.users.none { it.value.debugging("packets") || it.value.debugging("self-packets") }) return
 
+        event.getPlayer<Player>().npe.lastPacket = PacketLogData(
+            event.packetType,
+            ByteBufHelper.copy(event.byteBuf) as ByteBuf
+        )
+
+        if (NPEUser.users.none { it.value.debugging("packets") || it.value.debugging("self-packets") }) return
         val component = PacketInspection.inspect(event) ?: return
 
         for (user in NPEUser.users.values) {

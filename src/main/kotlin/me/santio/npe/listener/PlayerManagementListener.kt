@@ -7,6 +7,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import me.santio.npe.NPE
 import me.santio.npe.data.NPEUser
+import me.santio.npe.data.PacketLogger
 import me.santio.npe.data.npe
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
@@ -16,6 +17,7 @@ import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import java.util.function.Consumer
 
+@Suppress("unused")
 @AutoService(Listener::class)
 class PlayerManagementListener: Listener {
 
@@ -23,6 +25,7 @@ class PlayerManagementListener: Listener {
     private fun onQuit(event: PlayerQuitEvent) {
         scope.launch {
             event.player.npe.save()
+            PacketLogger.saveLog(event.player.npe)
 
             Bukkit.getScheduler().runTaskLater(NPE.instance, Consumer {
                 if (event.player.isOnline) return@Consumer

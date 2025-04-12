@@ -8,6 +8,7 @@ import me.santio.npe.base.ProcessorLoader
 import me.santio.npe.command.BaseCommand
 import me.santio.npe.data.NPEUser
 import me.santio.npe.data.PacketDumper
+import me.santio.npe.data.PacketLogger
 import me.santio.npe.data.npe
 import me.santio.npe.ruleset.RuleSet
 import me.santio.npe.tasks.BufferResetTask
@@ -67,6 +68,12 @@ class NPE: JavaPlugin() {
 
         PacketEvents.getAPI().init();
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, BufferResetTask, 20L, 20L)
+
+        Runtime.getRuntime().addShutdownHook(Thread {
+            for (player in NPEUser.users.values) {
+                PacketLogger.saveLog(player)
+            }
+        })
     }
 
     override fun onDisable() {

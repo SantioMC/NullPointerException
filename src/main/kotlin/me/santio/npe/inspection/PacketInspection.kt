@@ -18,6 +18,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import org.bukkit.entity.Player
+import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
@@ -29,6 +30,7 @@ object PacketInspection {
     private val ignored = mutableSetOf<String>("copy", "read", "write")
     private val lookup: MethodHandles.Lookup = MethodHandles.lookup()
     private val serializer = LegacyComponentSerializer.legacyAmpersand()
+    private val logger = LoggerFactory.getLogger(PacketInspection::class.java)
 
     private val gson: Gson = GsonBuilder()
         .serializeNulls()
@@ -57,6 +59,7 @@ object PacketInspection {
         try {
             wrapperClass = Class.forName(wrapperClassName) as Class<out PacketWrapper<*>>
         } catch (_: ClassNotFoundException) {
+            logger.warn("Failed to find wrapper class for ${packetType.name}, name tried: $wrapperClassName")
             return null
         }
 

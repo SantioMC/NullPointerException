@@ -10,6 +10,7 @@ autoservice-ksp = "1.2.0"
 cloud = "2.0.0"
 cloud-paper = "2.0.0-beta.10"
 gson = "2.12.1"
+netty = "4.2.0.Final"
 
 [plugins]
 pluginyml = { id = "net.minecrell.plugin-yml.paper", version.ref = "pluginyml" }
@@ -21,6 +22,7 @@ autoservice-google = { module = "com.google.auto.service:auto-service", version.
 autoservice-ksp = { module = "dev.zacsweers.autoservice:auto-service-ksp", version.ref="autoservice-ksp" }
 
 packetevents-spigot = { module = "com.github.retrooper:packetevents-spigot", version.ref = "packetevents" }
+netty = { module = "io.netty:netty-buffer", version.ref = "netty" }
 paper = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 
 cloud-core = { module = "org.incendo:cloud-core", version.ref = "cloud" }

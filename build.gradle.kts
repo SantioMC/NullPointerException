@@ -20,7 +20,10 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+
     implementation(libs.packetevents.spigot)
+    implementation(libs.netty)
+
     implementation(libs.bundles.cloud)
     compileOnly(libs.paper)
 

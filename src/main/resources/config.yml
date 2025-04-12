@@ -10,6 +10,20 @@
 #
 
 #
+# General settings
+#
+# Generic settings for NullPointerException as a whole.
+#
+npe:
+  # Whether to log packets and alerts of players to a file
+  # This will keep track of every packet sent by players along with their violations and write it to a
+  # file on shutdown, this will reserve 1MB by default of space in memory per player.
+  packet-logger:
+    enabled: true
+
+#
+# Module settings
+#
 # The following section is for customization of all modules, processors, and flags
 # that are used by the plugin, keys are named in a way that should hopefully be as
 # self-explanatory as possible, but if you're unsure then the default values should
@@ -40,6 +54,7 @@ modules:
     flood_window: 3
     hard_limit_per_second: 1000
     max_empty_creative_item_packets_per_second: 920
+    max_tab_complete_packets_per_second: 60
   # Prevents players from loading chunks that are too far outside the world border
   # ! Can not be cancelled, use either `kick` or `ignore` resolution
   chunk-loading:
