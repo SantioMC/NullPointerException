@@ -91,5 +91,24 @@ modules:
       profile-data:
         enabled: true
         max_properties_data: 8
-        allowedDomains:
+        allowed_domains:
           - minecraft.net
+  # Detection against clicking on slots that do not exist
+  inventory-slot:
+    enabled: true
+    resolution: cancel
+  # Detection against tab completing an expensive argument
+  tab-complete:
+    enabled: true
+    resolution: cancel
+    max_command_length: 128
+    max_square_brackets: 10
+    max_curly_brackets: 15
+  # Detection against impossible lectern clicks
+  lectern-click:
+    enabled: true
+    resolution: cancel
+  # Detection against clicking with a button key that isn't possible to use
+  button-click:
+    enabled: true
+    resolution: cancel
