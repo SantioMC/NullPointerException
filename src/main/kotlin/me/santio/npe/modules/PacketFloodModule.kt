@@ -25,7 +25,7 @@ class PacketFloodModule: Module(
         val player = event.getPlayer<Player>()
 
         var maxPacketsPerSecond = config("max_packets_per_second", 30)
-        val floodDuration = config("flood_window", 10)
+        val floodDuration = config("flood_window", 3)
         val hardLimitPerSecond = config("hard_limit_per_second", 1000)
 
         // Check if the player is sending too many packets in total
@@ -40,7 +40,7 @@ class PacketFloodModule: Module(
         if (event.packetType == PacketType.Play.Client.CREATIVE_INVENTORY_ACTION) {
             val wrapper = try {
                 WrapperPlayClientCreativeInventoryAction(event)
-            } catch (e: Exception) { null }
+            } catch (_: Exception) { null }
 
             if (wrapper != null && wrapper.itemStack.isEmpty) {
                 // We want to increase the buffer before we flag the packet

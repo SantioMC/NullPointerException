@@ -8,6 +8,7 @@ import com.github.retrooper.packetevents.protocol.component.ComponentTypes
 import com.github.retrooper.packetevents.protocol.item.ItemStack
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import com.github.retrooper.packetevents.wrapper.PacketWrapper
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientClickWindow
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import me.santio.npe.helper.mm
@@ -57,8 +58,10 @@ object PacketInspection {
 
         val wrapperClass: Class<out PacketWrapper<*>?>
         try {
-            wrapperClass = Class.forName(wrapperClassName) as Class<out PacketWrapper<*>>
-        } catch (_: ClassNotFoundException) {
+            wrapperClass = WrapperPlayClientClickWindow::class.java.classLoader.loadClass(wrapperClassName) as Class<out PacketWrapper<*>>
+//            wrapperClass = Class.forName(wrapperClassName) as Class<out PacketWrapper<*>>
+        } catch (e: ClassNotFoundException) {
+            e.printStackTrace()
             logger.warn("Failed to find wrapper class for ${packetType.name}, name tried: $wrapperClassName")
             return null
         }
@@ -202,6 +205,18 @@ object PacketInspection {
         return methodName.substring(index)
     }
 
+    private fun prettyPrint(value: Any?): Component {
+        if (value is Component) {
+            return value
+        }
+
+        return Component.text(try {
+            gson.toJson(value)
+        } catch (e: Exception) {
+            "${e.javaClass.simpleName}: ${e.message}"
+        })
+    }
+
     /**
      * Reads an ItemStack from PacketEvents and converts it to a nicely readable component
      * @param item The item stack to read
@@ -227,22 +242,23 @@ object PacketInspection {
             val componentData = item.getComponent(component)
             if (componentData.isEmpty) continue
 
-            var value = try {
+            var value = prettyPrint(componentData.get())
+            val raw = try {
                 gson.toJson(componentData.get())
             } catch (e: Exception) {
                 "${e.javaClass.simpleName}: ${e.message}"
             }
 
-            clipboard.append("\n| ${component.name}\n${value}\n")
+            clipboard.append("\n| ${component.name}\n${raw}\n")
 
-            if (value.length > 2048) {
-                value = "Too long to display, please copy to clipboard"
+            if (raw.length > 2048) {
+                value = Component.text("Too long to display, please copy to clipboard", NamedTextColor.RED)
             }
 
             data = data.append(mm(
                 "<br><primary>│ <body><name><br><white><value><br>",
                 Placeholder.unparsed("name", component.name.toString()),
-                Placeholder.unparsed("value", value)
+                Placeholder.component("value", value)
             ))
         }
 

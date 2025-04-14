@@ -69,7 +69,10 @@ kotlin {
 tasks {
     shadowJar {
         mergeServiceFiles()
-        minimize()
+        minimize {
+            exclude(dependency(libs.packetevents.spigot.get().toString()))
+        }
+
         archiveFileName.set("NullPointerException.jar")
 
         exclude("org.intellij.lang.annotations")

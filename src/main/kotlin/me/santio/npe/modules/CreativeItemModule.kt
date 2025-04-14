@@ -67,7 +67,7 @@ class CreativeItemModule: Module(
         val item = wrapper.itemStack
         val player = event.getPlayer<Player>()
 
-        if (player.npe.debugging("item-spawns")) {
+        if (player.npe.debugging("item-spawns") && !item.isEmpty) {
             player.npe.sendDebug(PacketInspection.readItem(item.copy()), chat = true)
         }
 
