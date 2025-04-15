@@ -20,7 +20,7 @@ object PacketLogger {
 
         val rawHex = player.lastPacket?.let {
             hexDump(it.data)
-        }?.chunked(16*2)?.joinToString("\n")
+        }?.chunked(32)?.joinToString("\n")
 
         val hexDump = rawHex?.let {
             it.lines().map {
@@ -28,7 +28,7 @@ object PacketLogger {
                 val parsed = HexFormat.of().parseHex(line)
                 val utf8 = String(parsed, Charsets.UTF_8)
 
-                "$it $utf8".replace("\n", "\\n")
+                (it.padEnd(36, ' ') + utf8).replace("\n", "\\n")
             }
         }?.joinToString("\n") ?: "null"
 
