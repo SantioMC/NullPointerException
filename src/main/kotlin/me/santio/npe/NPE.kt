@@ -37,8 +37,8 @@ class NPE: JavaPlugin() {
 
     @Suppress("UnstableApiUsage")
     override fun onLoad() {
-        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
-        PacketEvents.getAPI().load();
+        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this))
+        PacketEvents.getAPI().load()
 
         val settings: PacketEventsSettings = PacketEvents.getAPI().settings
         settings.checkForUpdates(false)
@@ -66,7 +66,7 @@ class NPE: JavaPlugin() {
             annotationParser.parse(it)
         }
 
-        PacketEvents.getAPI().init();
+        PacketEvents.getAPI().init()
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, BufferResetTask, 20L, 20L)
 
         Runtime.getRuntime().addShutdownHook(Thread {
@@ -77,7 +77,7 @@ class NPE: JavaPlugin() {
     }
 
     override fun onDisable() {
-        PacketEvents.getAPI().terminate();
+        PacketEvents.getAPI().terminate()
 
         runBlocking {
             for (player in NPEUser.users.values) {
