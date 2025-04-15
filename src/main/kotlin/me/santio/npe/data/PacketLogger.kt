@@ -1,8 +1,9 @@
 package me.santio.npe.data
 
-import io.netty.buffer.ByteBufUtil
+import io.netty.buffer.ByteBufUtil.hexDump
 import me.santio.npe.NPE
 import me.santio.npe.config.config
+import java.util.*
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createFile
 import kotlin.io.path.exists
@@ -17,9 +18,19 @@ object PacketLogger {
     fun saveLog(player: NPEUser) {
         if (!config("npe.log-packets.enabled", true)) return
 
-        val hexDump = player.lastPacket?.let {
-            ByteBufUtil.hexDump(it.data)
-        } ?: "null"
+        val rawHex = player.lastPacket?.let {
+            hexDump(it.data)
+        }?.chunked(16*2)?.joinToString("\n")
+
+        val hexDump = rawHex?.let {
+            it.lines().map {
+                val line = it.trim().replace(" ", "")
+                val parsed = HexFormat.of().parseHex(line)
+                val utf8 = String(parsed, Charsets.UTF_8)
+
+                "$it $utf8".replace("\n", "\\n")
+            }
+        }?.joinToString("\n") ?: "null"
 
         val violations = player.violations.entries.joinToString("\n") {
             "${it.key} - x${it.value}"
