@@ -6,12 +6,12 @@ import com.github.retrooper.packetevents.event.PacketSendEvent
 import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import com.google.auto.service.AutoService
-import io.netty.buffer.ByteBuf
-import io.netty.buffer.Unpooled
 import me.santio.npe.base.Processor
 import me.santio.npe.data.NPEUser
 import me.santio.npe.data.PacketLogData
 import me.santio.npe.data.npe
+import me.santio.npe.helper.buffer
+import me.santio.npe.helper.heapCopy
 import me.santio.npe.helper.not
 import me.santio.npe.inspection.PacketInspection
 import org.bukkit.entity.Player
@@ -63,10 +63,9 @@ class LogProcessor: Processor(
     override fun getPacket(event: PacketReceiveEvent) {
         if (event.packetType in spamPackets) return
 
-        val unpooledByteBuf = Unpooled.copiedBuffer(event.byteBuf as ByteBuf)
         event.getPlayer<Player>().npe.lastPacket = PacketLogData(
             event.packetType,
-            unpooledByteBuf
+            event.buffer.heapCopy()
         )
 
         if (NPEUser.users.none { it.value.debugging("packets") || it.value.debugging("self-packets") }) return

@@ -25,8 +25,7 @@ import org.bukkit.entity.Player
 class CreativeItemModule: Module(
     id = "Illegal Items",
     description = "Spawning in irregular items",
-    config = "illegal-items",
-    clone = false
+    config = "illegal-items"
 ) {
 
     override fun filter(): List<PacketTypeCommon> {

@@ -1,7 +1,6 @@
 package me.santio.npe.modules
 
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
-import com.github.retrooper.packetevents.netty.buffer.ByteBufHelper
 import com.github.retrooper.packetevents.protocol.item.ItemStack
 import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientCreativeInventoryAction
@@ -11,6 +10,7 @@ import me.santio.npe.base.Module
 import me.santio.npe.base.Processor
 import me.santio.npe.base.Resolution
 import me.santio.npe.data.npe
+import me.santio.npe.helper.buffer
 import org.bukkit.entity.Player
 
 @AutoService(Processor::class)
@@ -21,10 +21,9 @@ class PacketSizeModule: Module(
 ) {
 
     override fun getPacket(event: PacketReceiveEvent) {
-        val buffer = event.byteBuf
-        val readable = ByteBufHelper.readableBytes(buffer)
-
+        val readable = event.buffer.readableBytes()
         val isItemPacket = event.packetType == PacketType.Play.Client.CREATIVE_INVENTORY_ACTION
+
         val maxBytes = if (isItemPacket) {
             config("max_creative_item_bytes", 1024)
         } else {

@@ -17,7 +17,6 @@ import java.util.concurrent.ThreadFactory
 abstract class Processor(
     open val id: String,
     open val config: String,
-    open val clone: Boolean = true,
     open val priority: PacketListenerPriority = PacketListenerPriority.LOWEST
 ): PacketListener {
 
@@ -26,7 +25,6 @@ abstract class Processor(
         if (event?.user?.profile == null || event.user?.uuid == null || event.getPlayer<Player>() == null) return
 
         if (filter()?.contains(event.packetType) != false) {
-            val event = if (clone) event.clone() else event
             try {
                 this.getPacket(event)
             } catch (e: Exception) {
@@ -49,7 +47,6 @@ abstract class Processor(
         if (event?.user?.profile == null || event.user?.uuid == null || event.getPlayer<Player>() == null) return
 
         if (filter()?.contains(event.packetType) != false) {
-            val event = if (clone) event.clone() else event
             try {
                 this.sendPacket(event)
             } catch (e: Exception) {

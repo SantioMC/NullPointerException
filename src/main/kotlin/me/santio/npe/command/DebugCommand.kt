@@ -40,7 +40,7 @@ class DebugCommand: BaseCommand {
     ) {
         when (data) {
             "users" -> {
-                sender.source().npe.sendDebug(!"<gray>Users:")
+                sender.source().npe.sendDebug(!"<gray>Users:", chat = true)
                 for (user in NPEUser.users.values) {
                     sender.source().npe.sendDebug(user.toString(), chat = true)
                 }
