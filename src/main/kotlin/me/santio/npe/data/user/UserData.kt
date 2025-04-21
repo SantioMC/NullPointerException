@@ -1,4 +1,4 @@
-package me.santio.npe.data
+package me.santio.npe.data.user
 
 /**
  * Persistent data stored for a player

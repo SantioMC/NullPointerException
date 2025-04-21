@@ -8,7 +8,7 @@ import com.github.retrooper.packetevents.protocol.component.ComponentTypes
 import com.github.retrooper.packetevents.protocol.item.ItemStack
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import com.github.retrooper.packetevents.wrapper.PacketWrapper
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientClickWindow
+import com.google.common.reflect.ClassPath
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import me.santio.npe.helper.mm
@@ -32,6 +32,7 @@ object PacketInspection {
     private val lookup: MethodHandles.Lookup = MethodHandles.lookup()
     private val serializer = LegacyComponentSerializer.legacyAmpersand()
     private val logger = LoggerFactory.getLogger(PacketInspection::class.java)
+    private var wrappers: List<Class<PacketWrapper<*>>> = emptyList()
 
     private val gson: Gson = GsonBuilder()
         .serializeNulls()
@@ -52,14 +53,46 @@ object PacketInspection {
         return "$wrapperGroup.$wrapperName"
     }
 
+    /**
+     * Find the class of a wrapper by its name
+     * @param name The name of the wrapper (ex: WrapperPlayClientSelectBundleItem)
+     * @return The class for the wrapper
+     */
+    fun findWrapper(name: String): Class<PacketWrapper<*>>? {
+        val root = PacketWrapper::class.java.packageName
+        val parts = getWrapperParts(name)
+        if (parts.size < 3) return null
+
+        @Suppress("UNCHECKED_CAST")
+        return Class.forName(
+            "$root.${parts[1]}.${parts[2]}.$name"
+        ) as? Class<PacketWrapper<*>>
+    }
+
+    private fun getWrapperParts(wrapper: String): List<String> {
+        val parts = mutableListOf<String>()
+        var buffer = ""
+
+        wrapper.forEach {
+            if (it.isUpperCase() && buffer.isNotBlank()) {
+                parts.add(buffer)
+                buffer = ""
+            }
+
+            buffer += it.lowercase()
+        }
+
+        parts.add(buffer)
+        return parts
+    }
+
     @Suppress("UNCHECKED_CAST")
     fun getWrapper(event: PacketEvent, packetType: PacketTypeCommon): PacketWrapper<*>? {
         val wrapperClassName = getWrapperPacketClassName(packetType)
 
         val wrapperClass: Class<out PacketWrapper<*>?>
         try {
-            wrapperClass = WrapperPlayClientClickWindow::class.java.classLoader.loadClass(wrapperClassName) as Class<out PacketWrapper<*>>
-//            wrapperClass = Class.forName(wrapperClassName) as Class<out PacketWrapper<*>>
+            wrapperClass = Class.forName(wrapperClassName) as Class<out PacketWrapper<*>>
         } catch (e: ClassNotFoundException) {
             e.printStackTrace()
             logger.warn("Failed to find wrapper class for ${packetType.name}, name tried: $wrapperClassName")
@@ -297,5 +330,24 @@ object PacketInspection {
         }
 
         return diff
+    }
+
+    fun allWrappers(): List<Class<*>> {
+        if (wrappers.isNotEmpty()) return wrappers
+
+        return ClassPath.from(this.javaClass.classLoader)
+            .getTopLevelClassesRecursive(PacketWrapper::class.java.packageName)
+            .map { it.load() }
+            .filter {
+                PacketWrapper::class.java.isAssignableFrom(it)
+                    && it != PacketWrapper::class.java
+            }
+            .map {
+                @Suppress("UNCHECKED_CAST")
+                it as Class<PacketWrapper<*>>
+            }
+            .also {
+                this.wrappers = it
+            }
     }
 }

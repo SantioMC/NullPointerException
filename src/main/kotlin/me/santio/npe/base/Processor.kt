@@ -6,7 +6,8 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.github.retrooper.packetevents.event.PacketSendEvent
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import me.santio.npe.NPE
-import me.santio.npe.data.npe
+import me.santio.npe.data.user.AlertData
+import me.santio.npe.data.user.npe
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.ClickEvent
 import org.bukkit.entity.Player
@@ -79,8 +80,8 @@ abstract class Processor(
         val resolution = resolution(resolution)
         if (resolution.shouldCancel && !player.npe.bypassing()) event.isCancelled = true
 
-        event.getPlayer<Player>().npe.flag(
-            event.getPlayer<Player>(),
+        val alert = AlertData(
+            event.getPlayer(),
             id,
             resolution.shouldKick,
             clickEvent,
@@ -90,6 +91,8 @@ abstract class Processor(
             "resolution" to resolution.name.lowercase()
             data()
         }
+
+        event.getPlayer<Player>().npe.flag(alert)
     }
 
     override fun toString(): String {

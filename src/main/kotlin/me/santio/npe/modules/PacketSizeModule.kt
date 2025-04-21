@@ -9,7 +9,7 @@ import com.google.auto.service.AutoService
 import me.santio.npe.base.Module
 import me.santio.npe.base.Processor
 import me.santio.npe.base.Resolution
-import me.santio.npe.data.npe
+import me.santio.npe.data.user.npe
 import me.santio.npe.helper.buffer
 import org.bukkit.entity.Player
 

@@ -3,6 +3,7 @@ package me.santio.npe.data
 import io.netty.buffer.ByteBufUtil.hexDump
 import me.santio.npe.NPE
 import me.santio.npe.config.config
+import me.santio.npe.data.user.NPEUser
 import java.util.*
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createFile

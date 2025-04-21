@@ -1,7 +1,7 @@
 package me.santio.npe.command
 
 import com.google.auto.service.AutoService
-import me.santio.npe.data.npe
+import me.santio.npe.data.user.npe
 import me.santio.npe.helper.not
 import org.incendo.cloud.annotations.Command
 import org.incendo.cloud.annotations.CommandDescription

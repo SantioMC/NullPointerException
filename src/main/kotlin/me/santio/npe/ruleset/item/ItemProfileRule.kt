@@ -32,10 +32,10 @@ class ItemProfileRule: GenericItemRule<ItemProfile>(
         val allowedDomains = config(processor, "allowed_domains", listOf("minecraft.net"))
 
         if (value.isBlank()) return false
-        val decoded = String(decoder.decode(value))
 
         // See if the texture conforms to the format
         return try {
+            val decoded = String(decoder.decode(value))
             val textureData = gson.fromJson(decoded, TextureData::class.java)
             val url = textureData.textures.skin.url
 
@@ -45,7 +45,7 @@ class ItemProfileRule: GenericItemRule<ItemProfile>(
 
             val data = URLInspector.inspect(url)
             data.domain in allowedDomains
-        } catch(e: Exception) {
+        } catch(_: Exception) {
             false
         }
     }

@@ -1,17 +1,16 @@
-package me.santio.npe.data
+package me.santio.npe.data.user
 
-import com.github.retrooper.packetevents.PacketEvents
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.santio.npe.NPE
 import me.santio.npe.base.BufferKey
-import me.santio.npe.base.FlagData
 import me.santio.npe.base.Processor
+import me.santio.npe.data.PacketLogData
 import me.santio.npe.io.BoundedOutputStream
+import me.santio.npe.metrics.BStatsMetrics
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
@@ -35,6 +34,7 @@ data class NPEUser(
     private val packetRate: MutableMap<PacketTypeCommon, AtomicLong> = ConcurrentHashMap()
     private var debug: String? = null
 
+    val debounce: MutableMap<String, AlertData> = ConcurrentHashMap()
     val violations: MutableMap<String, Long> = ConcurrentHashMap()
     var lastPacket: PacketLogData? = null
     val logBuffer: BoundedOutputStream = BoundedOutputStream(1048576) // 1MB
@@ -149,68 +149,24 @@ data class NPEUser(
     /**
      * Sends a flag to the player
      * @param player the player to send the flag to
-     * @param id the id of the flag
-     * @param disconnect whether to disconnect the player if the flag is clicked
-     * @param clickEvent the click event to send to the player
-     * @param extra the extra component to send to the player
-     * @param data the data to send to the player
+     * @param alert the data in the alert
      * @return the flag data
      */
-    fun flag(
-        player: Player,
-        id: String,
-        disconnect: Boolean = true,
-        clickEvent: ClickEvent? = null,
-        extra: Component? = null,
-        data: FlagData.() -> Unit = {}
-    ) {
-        val user = PacketEvents.getAPI().playerManager.getUser(player)
-        if (user == null) return
+    fun flag(alert: AlertData) {
+        this.violations.put(alert.id, this.violations.getOrDefault(alert.id, 0L) + 1)
+        val message = alert.component() ?: return
 
-        this.violations.put(id, this.violations.getOrDefault(id, 0L) + 1)
-        val flagData = FlagData().apply(data)
+        this.log(plainSerializer.serialize(message) + "\n" + plainSerializer.serialize(alert.hover()) + "\n")
+        BStatsMetrics.recordAlert(alert.id)
 
-        // Permission check
-        try {
-            if (!player.npe.bypassing() && disconnect) {
-                user.closeConnection()
-            }
-        } catch (e: Exception) {
-            NPE.logger.error("Failed to perform permission check on '{}'", player.name, e)
+        if (this.debounce.containsKey(alert.id)) {
+            val existing = debounce[alert.id]!!
+            existing.count += 1
+            existing.data = alert.data
+            return
         }
 
-        // Send the alert to administrators
-        var hover = Component.newline()
-        for (data in flagData.map()) {
-            hover = hover.append(
-                Component.text(data.key, NPE.primaryColor)
-                    .append(Component.text(": ", NamedTextColor.GRAY))
-                    .append(Component.text(data.value.toString(), NamedTextColor.WHITE))
-                    .appendNewline()
-            )
-        }
-
-        extra?.takeIf {
-            jsonSerializer.serialize(it).length <= 2048
-        }?.let { hover = hover.append(Component.newline().append(it)) }
-
-        var alert = Component.empty()
-            .append(Component.text(player.name, NamedTextColor.RED))
-            .append(Component.text(" was detected for ", NamedTextColor.GRAY))
-            .append(Component.text(id, NamedTextColor.YELLOW))
-            .hoverEvent(hover)
-
-        // Trim the click event if it's too long
-        if (clickEvent != null && clickEvent.action() == ClickEvent.Action.COPY_TO_CLIPBOARD) {
-            alert = if (clickEvent.value().length <= 10_000) {
-                alert.clickEvent(clickEvent)
-            } else {
-                alert.clickEvent(ClickEvent.copyToClipboard(clickEvent.value().take(10_000)))
-            }
-        }
-
-        this.log(plainSerializer.serialize(alert) + "\n" + plainSerializer.serialize(hover) + "\n")
-        NPE.broadcast(alert)
+        this.debounce[alert.id] = alert
     }
 
     fun getPath(): Path {

@@ -20,7 +20,7 @@ object ProcessorLoader {
         )
 
         loader.forEach {
-            if (!it.config("enabled", true)) {
+            if (!it.config("enabled", false)) {
                 logger.info("Skipping disabled processor ${it.id}, you can enable it with: modules.${it.config}.enabled")
                 return@forEach
             }

@@ -11,6 +11,8 @@ cloud = "2.0.0"
 cloud-paper = "2.0.0-beta.10"
 gson = "2.12.1"
 netty = "4.2.0.Final"
+guava = "33.4.8-jre"
+bson = "3.0.2"
 
 [plugins]
 pluginyml = { id = "net.minecrell.plugin-yml.paper", version.ref = "pluginyml" }
@@ -31,6 +33,8 @@ cloud-kotlin = { module = "org.incendo:cloud-kotlin-coroutines-annotations", ver
 cloud-paper = { module = "org.incendo:cloud-paper", version.ref = "cloud-paper" }
 
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
+bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bson" }
 
 [bundles]
 cloud = ["cloud-core", "cloud-annotations", "cloud-kotlin", "cloud-paper"]

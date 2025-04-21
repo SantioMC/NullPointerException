@@ -6,11 +6,13 @@ import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder
 import kotlinx.coroutines.runBlocking
 import me.santio.npe.base.ProcessorLoader
 import me.santio.npe.command.BaseCommand
-import me.santio.npe.data.NPEUser
 import me.santio.npe.data.PacketDumper
 import me.santio.npe.data.PacketLogger
-import me.santio.npe.data.npe
+import me.santio.npe.data.user.NPEUser
+import me.santio.npe.data.user.npe
+import me.santio.npe.metrics.BStatsMetrics
 import me.santio.npe.ruleset.RuleSet
+import me.santio.npe.tasks.AlertBroadcastTask
 import me.santio.npe.tasks.BufferResetTask
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -68,7 +70,9 @@ class NPE: JavaPlugin() {
 
         PacketEvents.getAPI().init()
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, BufferResetTask, 20L, 20L)
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, AlertBroadcastTask, 20L, 20L)
 
+        BStatsMetrics.register(this)
         Runtime.getRuntime().addShutdownHook(Thread {
             for (player in NPEUser.users.values) {
                 PacketLogger.saveLog(player)
@@ -121,6 +125,11 @@ class NPE: JavaPlugin() {
             for (player in Bukkit.getOnlinePlayers()) {
                 player.npe.alert(message)
             }
+        }
+
+        fun getServerHost(): String {
+            if (System.getenv().containsKey("SERVER_ID")) return "Minehut"
+            return "Other"
         }
     }
 

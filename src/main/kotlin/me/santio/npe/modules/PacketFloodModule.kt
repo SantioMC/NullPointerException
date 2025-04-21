@@ -6,7 +6,7 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientCr
 import com.google.auto.service.AutoService
 import me.santio.npe.base.Module
 import me.santio.npe.base.Processor
-import me.santio.npe.data.npe
+import me.santio.npe.data.user.npe
 import org.bukkit.entity.Player
 
 @AutoService(Processor::class)

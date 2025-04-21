@@ -3,7 +3,7 @@ package me.santio.npe.processor
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.google.auto.service.AutoService
 import me.santio.npe.base.Processor
-import me.santio.npe.data.npe
+import me.santio.npe.data.user.npe
 import org.bukkit.entity.Player
 import java.util.concurrent.TimeUnit
 

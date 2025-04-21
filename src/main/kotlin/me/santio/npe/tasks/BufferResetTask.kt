@@ -1,6 +1,6 @@
 package me.santio.npe.tasks
 
-import me.santio.npe.data.NPEUser
+import me.santio.npe.data.user.NPEUser
 
 object BufferResetTask: Runnable {
 

@@ -12,7 +12,7 @@ import io.github.retrooper.packetevents.util.SpigotReflectionUtil
 import me.santio.npe.base.Module
 import me.santio.npe.base.Processor
 import me.santio.npe.base.Resolution
-import me.santio.npe.data.npe
+import me.santio.npe.data.user.npe
 import me.santio.npe.inspection.PacketInspection
 import me.santio.npe.ruleset.RuleSet
 import me.santio.npe.ruleset.item.GenericItemRule

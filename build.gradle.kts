@@ -31,6 +31,9 @@ dependencies {
 
     ksp(libs.autoservice.ksp)
     compileOnly(libs.autoservice.google)
+
+    implementation(libs.guava)
+    implementation(libs.bstats)
 }
 
 ksp {
@@ -69,9 +72,14 @@ kotlin {
 tasks {
     shadowJar {
         mergeServiceFiles()
+
         minimize {
             exclude(dependency(libs.packetevents.spigot.get().toString()))
+            exclude(dependency(libs.cloud.core.get().toString()))
+            exclude(dependency(libs.cloud.annotations.get().toString()))
         }
+
+        relocate("org.bstats", "me.santio.lib.bstats")
 
         archiveFileName.set("NullPointerException.jar")
 

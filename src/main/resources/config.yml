@@ -26,7 +26,7 @@ npe:
 #
 # The following section is for customization of all modules, processors, and flags
 # that are used by the plugin, keys are named in a way that should hopefully be as
-# self-explanatory as possible, but if you're unsure then the default values should
+# self-explanatory as possible, but if you're unsure, then the default values should
 # be fine.
 #
 # Each rule comes with two options regardless of what it is, which are the following:
@@ -56,7 +56,7 @@ modules:
     max_empty_creative_item_packets_per_second: 920
     max_tab_complete_packets_per_second: 60
   # Prevents players from loading chunks that are too far outside the world border
-  # ! Can not be cancelled, use either `kick` or `ignore` resolution
+  # ! Cannot be canceled, use either `kick` or `ignore` resolution
   chunk-loading:
     enabled: true
     resolution: kick
@@ -70,7 +70,7 @@ modules:
     #
     # Rules are per item-component rules on when the component is allowed to stay on
     # the item stack. NullPointerException prevents some components from being added
-    # at all. Each rule comes with an `enabled` option, if disabled then the component
+    # at all. Each rule comes with an `enabled` option, if disabled, then the component
     # will be copied as-is without any checks.
     #
     rules:
@@ -110,5 +110,13 @@ modules:
     resolution: cancel
   # Detection against clicking with a button key that isn't possible to use
   button-click:
+    enabled: true
+    resolution: cancel
+  # Detection against illegally setting your bundle slot to a negative number
+  bundle-item:
+    enabled: true
+    resolution: kick
+  # Prevents users in creative from creating massive containers
+  massive-containers:
     enabled: true
     resolution: cancel

@@ -3,7 +3,8 @@ package me.santio.npe.listener
 import com.google.auto.service.AutoService
 import io.papermc.paper.event.packet.PlayerChunkLoadEvent
 import me.santio.npe.config.config
-import me.santio.npe.data.npe
+import me.santio.npe.data.user.AlertData
+import me.santio.npe.data.user.npe
 import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.event.EventHandler
@@ -53,16 +54,18 @@ class ChunkListener: Listener {
         val worldBorder = event.chunk.world.worldBorder
         val borderSize = (worldBorder.size / 2.0) + buffer
 
-        event.player.npe.flag(
+        val alert = AlertData(
             event.player,
-            "illegal chunk load",
-            disconnect = config("modules.chunk-loading.resolution", "kick") == "kick",
+            "Illegal Chunk Load",
+            disconnect = config("modules.chunk-loading.resolution", "kick") == "kick"
         ) {
             "chunkX" to chunkLocX
             "chunkZ" to chunkLocZ
             "worldBorder" to worldBorder.size
             "borderSize (w/ buffer)" to borderSize
         }
+
+        event.player.npe.flag(alert)
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

@@ -23,7 +23,7 @@ fun <T: Any> parseFromConfig(clazz: Class<T>, value: Any?): T? {
 
     if (clazz.isEnum) {
         val enumClazz = clazz as Class<out Enum<*>>
-        return java.lang.Enum.valueOf(enumClazz, (value as String).uppercase()) as T
+        return java.lang.Enum.valueOf(enumClazz, (value as String).uppercase()) as? T
     }
 
     return value as? T
@@ -33,10 +33,17 @@ fun <T: Any> parseFromConfig(clazz: Class<T>, value: Any?): T? {
 inline fun <reified T: Any> config(key: String, default: T): T {
     if (T::class.java.isAssignableFrom(List::class.java)) {
         val listClazz = T::class.java as Class<out List<*>>
+        val superClass = listClazz.genericSuperclass as? Class<Any>
+            ?: String::class.java
+
         return NPE.instance.config.getStringList(key)
-            .mapNotNull { parseFromConfig(listClazz.genericSuperclass as Class<Any>, it) }
-            .toList() as T
+            .mapNotNull { parseFromConfig(superClass, it) }
+            .toList() as? T
+            ?: run {
+                NPE.logger.warn("Failed to find valid super class for $key, defaulting...")
+                return default
+            }
     }
 
-    return parseFromConfig<T>(T::class.java, NPE.instance.config.get(key)) ?: default
+    return parseFromConfig(T::class.java, NPE.instance.config.get(key)) ?: default
 }

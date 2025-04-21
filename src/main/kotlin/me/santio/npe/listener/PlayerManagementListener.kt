@@ -6,9 +6,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import me.santio.npe.NPE
-import me.santio.npe.data.NPEUser
 import me.santio.npe.data.PacketLogger
-import me.santio.npe.data.npe
+import me.santio.npe.data.user.NPEUser
+import me.santio.npe.data.user.npe
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
