@@ -1,5 +1,6 @@
 package me.santio.npe.ruleset
 
+import com.github.retrooper.packetevents.protocol.item.ItemStack
 import me.santio.npe.base.Processor
 import kotlin.reflect.KClass
 
@@ -19,20 +20,22 @@ abstract class Rule<T: Any>(
     /**
      * Checks the value, this is the actual predicate that is used to check if the rule passes
      * @param processor The processor that is using the rule
+     * @param itemStack The item stack for reference, do not modify this item
      * @param value The value to check
      * @return True if the rule passes, false otherwise
      */
-    abstract fun check(processor: Processor, value: T): Boolean
+    abstract fun check(processor: Processor, itemStack: ItemStack, value: T): Boolean
 
     /**
      * Attempts to produce a corrected value, if the value is null then the value should be completely
      * stripped if possible or an error should be thrown, whatever fits the implementation. The default
      * behaviour is to return null.
      * @param processor The processor that is using the rule
+     * @param itemStack The item stack for reference, do not modify this item
      * @param value The value to correct
      * @return The corrected value, or null if the value is null
      */
-    open fun correct(processor: Processor, value: T): T? { return null }
+    open fun correct(processor: Processor, itemStack: ItemStack, value: T): T? { return null }
 
     //region Config Helpers
     fun config(processor: Processor, key: String): String? {

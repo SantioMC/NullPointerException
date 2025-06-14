@@ -2,6 +2,7 @@ package me.santio.npe.ruleset.item
 
 import com.github.retrooper.packetevents.protocol.component.ComponentTypes
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemPotionContents
+import com.github.retrooper.packetevents.protocol.item.ItemStack
 import com.github.retrooper.packetevents.protocol.potion.Potions
 import com.google.auto.service.AutoService
 import me.santio.npe.base.Processor
@@ -22,7 +23,7 @@ class ItemPotionRule: GenericItemRule<ItemPotionContents>(
     message = "Invalid Potion Data",
 ) {
 
-    override fun check(processor: Processor, value: ItemPotionContents): Boolean {
+    override fun check(processor: Processor, itemStack: ItemStack, value: ItemPotionContents): Boolean {
         if (value.potion == null) return false
 
         val potion = Potions.getByName(value.potion!!.name.toString())

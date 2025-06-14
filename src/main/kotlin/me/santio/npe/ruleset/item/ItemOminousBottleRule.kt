@@ -1,6 +1,7 @@
 package me.santio.npe.ruleset.item
 
 import com.github.retrooper.packetevents.protocol.component.ComponentTypes
+import com.github.retrooper.packetevents.protocol.item.ItemStack
 import com.google.auto.service.AutoService
 import me.santio.npe.base.Processor
 import me.santio.npe.ruleset.Rule
@@ -20,11 +21,11 @@ class ItemOminousBottleRule: GenericItemRule<Int>(
     message = "Invalid Ominous Bottle Data",
 ) {
 
-    override fun check(processor: Processor, value: Int): Boolean {
+    override fun check(processor: Processor, itemStack: ItemStack, value: Int): Boolean {
         return value >= 0 && value <= 4
     }
 
-    override fun correct(processor: Processor, value: Int): Int? {
+    override fun correct(processor: Processor, itemStack: ItemStack, value: Int): Int? {
         return value.coerceIn(0, 4)
     }
 }

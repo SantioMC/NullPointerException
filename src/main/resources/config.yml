@@ -93,6 +93,10 @@ modules:
         max_properties_data: 8
         allowed_domains:
           - minecraft.net
+      # Limit what kind of entity data paintings can have
+      entity-data:
+        enabled: true
+        allow_paintings: true
   # Detection against clicking on slots that do not exist
   inventory-slot:
     enabled: true

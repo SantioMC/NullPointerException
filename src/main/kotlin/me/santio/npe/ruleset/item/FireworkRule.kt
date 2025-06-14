@@ -3,6 +3,7 @@ package me.santio.npe.ruleset.item
 import com.github.retrooper.packetevents.protocol.component.ComponentTypes
 import com.github.retrooper.packetevents.protocol.component.builtin.item.FireworkExplosion
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemFireworks
+import com.github.retrooper.packetevents.protocol.item.ItemStack
 import com.google.auto.service.AutoService
 import me.santio.npe.base.Processor
 import me.santio.npe.ruleset.Rule
@@ -25,6 +26,7 @@ class FireworkRule: GenericItemRule<ItemFireworks>(
 
     override fun check(
         processor: Processor,
+        itemStack: ItemStack,
         value: ItemFireworks
     ): Boolean {
         return value.explosions.isEmpty() && value.flightDuration <= 3 && value.flightDuration >= 0
@@ -32,6 +34,7 @@ class FireworkRule: GenericItemRule<ItemFireworks>(
 
     override fun correct(
         processor: Processor,
+        itemStack: ItemStack,
         value: ItemFireworks
     ): ItemFireworks {
         return ItemFireworks(

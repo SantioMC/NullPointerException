@@ -44,9 +44,9 @@ class CreativeItemModule: Module(
             }
 
             // only copy if it matches rule
-            if (!rule.check(this, originalComponent.get())) {
+            if (!rule.check(this, original, originalComponent.get())) {
                 // See if we can correct it
-                val corrected = rule.correct(this, originalComponent.get()) ?: return false
+                val corrected = rule.correct(this, original, originalComponent.get()) ?: return false
                 new.setComponent(rule.componentType, corrected)
                 return false
             } else {
@@ -92,7 +92,7 @@ class CreativeItemModule: Module(
             .build()
 
         // Add allowed components through
-        val rules = RuleSet.Companion.rules(RuleSet.PacketItem)
+        val rules = RuleSet.rules(RuleSet.PacketItem)
             .filterIsInstance(GenericItemRule::class.java)
 
         val failed = rules.map { rule ->
@@ -101,8 +101,6 @@ class CreativeItemModule: Module(
 
         // Check if it has changed in any way
         if (item != wrapper.itemStack) {
-            val diff = PacketInspection.diff(item, wrapper.itemStack)
-
             val extra = Component.text("Click to copy Item Data", NamedTextColor.YELLOW)
             flag(
                 event,

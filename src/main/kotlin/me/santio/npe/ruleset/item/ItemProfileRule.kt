@@ -2,6 +2,7 @@ package me.santio.npe.ruleset.item
 
 import com.github.retrooper.packetevents.protocol.component.ComponentTypes
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemProfile
+import com.github.retrooper.packetevents.protocol.item.ItemStack
 import com.google.auto.service.AutoService
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
@@ -50,7 +51,7 @@ class ItemProfileRule: GenericItemRule<ItemProfile>(
         }
     }
 
-    override fun check(processor: Processor, value: ItemProfile): Boolean {
+    override fun check(processor: Processor, itemStack: ItemStack, value: ItemProfile): Boolean {
         value.name?.let { name ->
             if (name.trim().isBlank()) return false
             if (name.length > 256) return false

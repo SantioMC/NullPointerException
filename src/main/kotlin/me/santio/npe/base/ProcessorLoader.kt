@@ -20,7 +20,8 @@ object ProcessorLoader {
         )
 
         loader.forEach {
-            if (!it.config("enabled", false)) {
+            // If it is a module, we default to disabled normally, otherwise enabled by default
+            if (!it.config("enabled", it !is Module)) {
                 logger.info("Skipping disabled processor ${it.id}, you can enable it with: modules.${it.config}.enabled")
                 return@forEach
             }

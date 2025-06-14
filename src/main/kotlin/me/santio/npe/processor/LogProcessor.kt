@@ -7,8 +7,8 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon
 import com.google.auto.service.AutoService
 import me.santio.npe.base.Processor
-import me.santio.npe.data.user.NPEUser
 import me.santio.npe.data.PacketLogData
+import me.santio.npe.data.user.NPEUser
 import me.santio.npe.data.user.npe
 import me.santio.npe.helper.buffer
 import me.santio.npe.helper.heapCopy
