@@ -5,6 +5,7 @@ import io.papermc.paper.event.packet.PlayerChunkLoadEvent
 import me.santio.npe.config.config
 import me.santio.npe.data.user.AlertData
 import me.santio.npe.data.user.npe
+import me.santio.npe.listener.loader.annotations.Toggle
 import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.event.EventHandler
@@ -17,7 +18,10 @@ import kotlin.math.min
 
 @Suppress("unused")
 @AutoService(Listener::class)
+@Toggle("modules.chunk-loading.enabled")
 class ChunkListener: Listener {
+
+    private val buffer by lazy { config("modules.chunk-loading.buffer", 250) }
 
     private fun isTooFarOutside(chunk: Chunk, buffer: Int): Boolean {
         val worldBorder = chunk.world.worldBorder
@@ -43,11 +47,8 @@ class ChunkListener: Listener {
     }
 
     @EventHandler(priority = EventPriority.LOW)
-    private fun onChunkLoad(event: PlayerChunkLoadEvent) {
-        val buffer = config("modules.chunk-loading.buffer", 250)
-
+    suspend fun onChunkLoad(event: PlayerChunkLoadEvent) {
         if (!isTooFarOutside(event.chunk, buffer)) return
-        if (!config("modules.chunk-loading.enabled", true)) return
 
         val chunkLocX = event.chunk.x shl 4
         val chunkLocZ = event.chunk.z shl 4
@@ -69,9 +70,9 @@ class ChunkListener: Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
+    @Toggle("modules.chunk-loading.send_back_inside_border", default = true)
     private fun onSpawn(event: PlayerSpawnLocationEvent) {
         if (!isTooFarOutside(event.player.location.chunk, buffer = 0)) return
-        if (!config("modules.chunk-loading.send_back_inside_border", true)) return
         event.spawnLocation = constraintLocation(event.spawnLocation)
     }
 

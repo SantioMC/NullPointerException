@@ -10,6 +10,7 @@ import me.santio.npe.data.PacketDumper
 import me.santio.npe.data.PacketLogger
 import me.santio.npe.data.user.NPEUser
 import me.santio.npe.data.user.npe
+import me.santio.npe.listener.loader.ListenerLoader
 import me.santio.npe.metrics.BStatsMetrics
 import me.santio.npe.ruleset.RuleSet
 import me.santio.npe.tasks.AlertBroadcastTask
@@ -22,7 +23,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
-import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import org.incendo.cloud.annotations.AnnotationParser
 import org.incendo.cloud.execution.ExecutionCoordinator
@@ -60,10 +60,6 @@ class NPE: JavaPlugin() {
         RuleSet.loadRules()
         PacketDumper.create()
 
-        ServiceLoader.load(Listener::class.java, this.javaClass.classLoader).forEach {
-            Bukkit.getPluginManager().registerEvents(it, this)
-        }
-
         ServiceLoader.load(BaseCommand::class.java, this.javaClass.classLoader).forEach {
             annotationParser.parse(it)
         }
@@ -80,6 +76,11 @@ class NPE: JavaPlugin() {
         })
     }
 
+    override fun reloadConfig() {
+        super.reloadConfig()
+        listenerLoader.reload()
+    }
+
     override fun onDisable() {
         PacketEvents.getAPI().terminate()
 
@@ -92,6 +93,7 @@ class NPE: JavaPlugin() {
 
     companion object {
         private val serializer = PlainTextComponentSerializer.plainText()
+        private val listenerLoader = ListenerLoader()
 
         val primaryColor = TextColor.fromHexString("#f44d1a")!!
         val debugColor = TextColor.fromHexString("#f51b55")!!

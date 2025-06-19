@@ -20,6 +20,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation(kotlin("reflect"))
 
     implementation(libs.packetevents.spigot)
     implementation(libs.netty)
@@ -77,6 +78,7 @@ tasks {
             exclude(dependency(libs.packetevents.spigot.get().toString()))
             exclude(dependency(libs.cloud.core.get().toString()))
             exclude(dependency(libs.cloud.annotations.get().toString()))
+            exclude(dependency("org.jetbrains.kotlin:kotlin-reflect"))
         }
 
         relocate("org.bstats", "me.santio.lib.bstats")

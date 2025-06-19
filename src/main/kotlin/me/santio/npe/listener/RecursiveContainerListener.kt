@@ -7,6 +7,7 @@ import me.santio.npe.base.Resolution
 import me.santio.npe.config.config
 import me.santio.npe.data.user.AlertData
 import me.santio.npe.data.user.npe
+import me.santio.npe.listener.loader.annotations.Toggle
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -18,13 +19,13 @@ import kotlin.jvm.optionals.getOrNull
 
 @Suppress("unused")
 @AutoService(Listener::class)
+@Toggle("modules.massive-containers.enabled", default = true)
 class RecursiveContainerListener: Listener {
 
     private val allowedTransactionTypes = setOf("PICKUP", "DROP", "CLONE", "COLLECT")
 
     @EventHandler(priority = EventPriority.LOWEST)
     private fun onContainerInContainer(event: InventoryClickEvent) {
-        if (!config("modules.massive-containers.enabled", true)) return
         val player = event.whoClicked as? Player ?: return
         if (event.action == InventoryAction.NOTHING) return
 
@@ -55,7 +56,6 @@ class RecursiveContainerListener: Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     private fun onInventoryClose(event: InventoryCloseEvent) {
-        if (!config("modules.massive-containers.enabled", true)) return
         if (event.inventory.type == InventoryType.PLAYER || event.inventory.type == InventoryType.CRAFTING) return
 
         val player = event.player as? Player ?: return
