@@ -37,16 +37,6 @@ import kotlin.io.path.createDirectories
 
 class NPE: JavaPlugin() {
 
-    @Suppress("UnstableApiUsage")
-    override fun onLoad() {
-        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this))
-        PacketEvents.getAPI().load()
-
-        val settings: PacketEventsSettings = PacketEvents.getAPI().settings
-        settings.checkForUpdates(false)
-    }
-
-    @Suppress("UnstableApiUsage")
     override fun onEnable() {
         this.dataPath.createDirectories()
         this.saveDefaultConfig()
@@ -64,7 +54,6 @@ class NPE: JavaPlugin() {
             annotationParser.parse(it)
         }
 
-        PacketEvents.getAPI().init()
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, BufferResetTask, 20L, 20L)
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, AlertBroadcastTask, 20L, 20L)
 
@@ -82,8 +71,6 @@ class NPE: JavaPlugin() {
     }
 
     override fun onDisable() {
-        PacketEvents.getAPI().terminate()
-
         runBlocking {
             for (player in NPEUser.users.values) {
                 player.save()

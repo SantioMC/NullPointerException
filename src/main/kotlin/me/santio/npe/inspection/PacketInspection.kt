@@ -18,6 +18,7 @@ import net.kyori.adventure.text.event.HoverEvent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandle
@@ -335,7 +336,10 @@ object PacketInspection {
     fun allWrappers(): List<Class<*>> {
         if (wrappers.isNotEmpty()) return wrappers
 
-        return ClassPath.from(this.javaClass.classLoader)
+        val packetevents = Bukkit.getPluginManager().getPlugin("packetevents")
+            ?: return emptyList()
+
+        return ClassPath.from(packetevents.javaClass.classLoader)
             .getTopLevelClassesRecursive(PacketWrapper::class.java.packageName)
             .map { it.load() }
             .filter {

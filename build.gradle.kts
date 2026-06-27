@@ -22,7 +22,7 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
 
-    implementation(libs.packetevents.spigot)
+    compileOnly(libs.packetevents.spigot)
     implementation(libs.netty)
 
     implementation(libs.bundles.cloud)
@@ -59,6 +59,11 @@ paper {
         register("ViaVersion") {
             load = PaperPluginDescription.RelativeLoadOrder.BEFORE
             required = false
+        }
+        register("packetevents") {
+            load = PaperPluginDescription.RelativeLoadOrder.BEFORE
+            required = true
+            joinClasspath = true
         }
     }
 }

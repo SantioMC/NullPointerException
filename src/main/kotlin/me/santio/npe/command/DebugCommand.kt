@@ -74,7 +74,7 @@ class DebugCommand: BaseCommand {
             ?.firstOrNull { it.parameterTypes.all { parameter -> DataConverter.isSupported(parameter) } }
             ?: return sender.source().sendMessage(!"<gray>Failed to find a constructor for <red>$packet")
 
-        if (args == null) {
+        if (args == null && constructor.parameters.isNotEmpty()) {
             var command = "/npe debug simulate ${target.name} $packet"
 
             val fields = wrapper.declaredFields // stupid, but works
@@ -95,19 +95,21 @@ class DebugCommand: BaseCommand {
             return
         }
 
-        val args = DataConverter.split(args)
-            .mapIndexed { i, it -> DataConverter.cast(it, constructor.parameters[i].type) }
-            .toTypedArray()
+        val args = args?.let {
+            DataConverter.split(it)
+                .mapIndexed { i, it -> DataConverter.cast(it, constructor.parameters[i].type) }
+                .toTypedArray()
+        } ?: emptyArray()
 
         val instance = constructor.newInstance(*args) as PacketWrapper<*>
         val isClient = wrapper.packageName.endsWith(".client")
 
         if (isClient) {
             PacketEvents.getAPI().playerManager.receivePacket(target, instance)
-            sender.source().sendMessage(!"<gray>Simulating <#8cd17d>sending<gray> a $packet packet as <primary>${target.name}<gray>!")
+            sender.source().sendMessage(!"<gray>Simulating <#8cd17d>receiving<gray> a $packet packet as <primary>${target.name}<gray>!")
         } else {
             PacketEvents.getAPI().playerManager.sendPacket(target, instance)
-            sender.source().sendMessage(!"<gray>Simulating <#d1847d>receiving<gray> a $packet packet as <primary>${target.name}<gray>!")
+            sender.source().sendMessage(!"<gray>Simulating <#d1847d>sending<gray> a $packet packet to <primary>${target.name}<gray>!")
         }
     }
 
